@@ -1,0 +1,19 @@
+{
+  "name": "LYRICA — 作詞ノート",
+  "short_name": "Lyrica",
+  "description": "作詞のアイデアをまとめるノートアプリ",
+  "start_url": "./lyrica_v12.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f5f0e8",
+  "theme_color": "#f5f0e8",
+  "lang": "ja",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='112' fill='%23f5f0e8'/%3E%3Ctext x='256' y='340' font-size='280' text-anchor='middle'%3E%E2%9C%BF%3C/text%3E%3C/svg%3E",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

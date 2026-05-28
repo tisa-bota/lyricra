@@ -1,0 +1,2417 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>LYRICA — 作詞ノート</title>
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#f5f0e8">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Lyrica">
+<!-- Apple touch icons (SVGをDataURIで埋め込み済み — manifest.jsonのiconも同様) -->
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='112' fill='%23f5f0e8'/%3E%3Ctext x='256' y='340' font-size='280' text-anchor='middle'%3E✿%3C/text%3E%3C/svg%3E">
+
+<link href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@400;700;900&family=Kaisei+Tokumin:wght@400;500;700&family=DM+Serif+Display:ital@0;1&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f5f0e8;
+  --bg2: #ede5d8;
+  --surface: #faf7f2;
+  --surface2: #f0e8dc;
+  --border: #c8b8a2;
+  --border-soft: #ddd0bc;
+  --accent: #8c5e3c;
+  --accent2: #a87050;
+  --accent-soft: rgba(140,94,60,0.10);
+  --pink: #a85870;
+  --pink-soft: rgba(168,88,112,0.12);
+  --sage: #4e7a60;
+  --sage-soft: rgba(78,122,96,0.12);
+  --lavender: #6e5ea0;
+  --lav-soft: rgba(110,94,160,0.12);
+  --blue: #3a6490;
+  --blue-soft: rgba(58,100,144,0.12);
+  /* ── TEXT: 濃くした ── */
+  --text:  #1e1612;
+  --text2: #5a4838;
+  --text3: #8a7060;
+  --shadow: rgba(80,50,20,0.09);
+  --shadow2: rgba(80,50,20,0.16);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Noto Sans JP', sans-serif;
+  font-weight: 400;
+  min-height: 100vh;
+}
+
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image:
+    radial-gradient(ellipse 80% 60% at 8% 8%, rgba(210,185,155,0.28) 0%, transparent 60%),
+    radial-gradient(ellipse 55% 75% at 92% 92%, rgba(185,170,200,0.18) 0%, transparent 60%);
+  pointer-events: none; z-index: 0;
+}
+
+/* ── LAYOUT ── */
+.app { display: flex; min-height: 100vh; position: relative; z-index: 1; }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: 256px; min-width: 256px;
+  background: var(--surface);
+  border-right: 1px solid var(--border-soft);
+  display: flex; flex-direction: column;
+  box-shadow: 2px 0 14px var(--shadow);
+  position: sticky; top: 0; height: 100vh; overflow: hidden;
+}
+
+.sidebar-header {
+  padding: 26px 20px 18px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.logo {
+  font-family: 'Zen Old Mincho', serif;
+  font-size: 1.55rem; font-weight: 900;
+  color: var(--accent); letter-spacing: 0.18em; margin-bottom: 3px;
+}
+
+.logo-sub {
+  font-size: 0.68rem; color: var(--text3);
+  letter-spacing: 0.22em; font-family: 'DM Serif Display', serif; font-style: italic;
+}
+
+.sidebar-sec-label {
+  font-size: 0.63rem; color: var(--text3); letter-spacing: 0.18em;
+  text-transform: uppercase; padding: 14px 20px 7px;
+  font-weight: 500;
+}
+
+.new-song-btn {
+  margin: 0 14px 10px; width: calc(100% - 28px);
+  padding: 9px; background: var(--accent-soft);
+  border: 1.5px dashed var(--accent); border-radius: 8px;
+  color: var(--accent); font-family: 'Noto Sans JP', sans-serif;
+  font-size: 0.8rem; cursor: pointer; transition: all 0.2s; letter-spacing: 0.05em;
+}
+.new-song-btn:hover { background: var(--accent); color: #fff; border-style: solid; }
+
+.song-list { flex: 1; overflow-y: auto; padding: 4px 10px 20px; }
+
+.song-item {
+  padding: 9px 11px; border-radius: 8px; cursor: pointer;
+  transition: all 0.15s; margin-bottom: 3px; border: 1px solid transparent;
+}
+.song-item:hover { background: var(--surface2); border-color: var(--border-soft); }
+.song-item.active { background: var(--accent-soft); border-color: rgba(140,94,60,0.28); }
+
+.song-name {
+  font-size: 0.84rem; color: var(--text); font-weight: 400;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.song-item.active .song-name { color: var(--accent); font-weight: 500; }
+
+.song-date { font-size: 0.66rem; color: var(--text3); margin-top: 2px; }
+
+.song-tags-preview { display: flex; gap: 4px; margin-top: 4px; flex-wrap: wrap; }
+.mini-tag {
+  font-size: 0.6rem; padding: 1px 6px; border-radius: 10px;
+  background: var(--bg2); color: var(--text2);
+}
+
+/* ── MAIN ── */
+.main { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+
+/* ── TOPBAR ── */
+.topbar {
+  position: sticky; top: 0; z-index: 10;
+  background: rgba(245,240,232,0.94); backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border-soft);
+  padding: 13px 32px; display: flex; align-items: center; gap: 12px;
+}
+
+.song-title-input {
+  flex: 1; font-family: 'Kaisei Tokumin', serif;
+  font-size: 1.25rem; font-weight: 500; color: var(--text);
+  background: transparent; border: none; outline: none; letter-spacing: 0.03em;
+}
+.song-title-input::placeholder { color: var(--text3); }
+
+.topbar-actions { display: flex; gap: 8px; align-items: center; }
+
+.btn-icon {
+  width: 32px; height: 32px; border: 1px solid var(--border);
+  border-radius: 6px; background: var(--surface); color: var(--text2);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 0.95rem; transition: all 0.15s;
+}
+.btn-icon:hover { background: var(--surface2); color: var(--accent); border-color: var(--accent); }
+
+.btn-save {
+  padding: 7px 16px; background: var(--accent); color: #fff;
+  border: none; border-radius: 6px; font-family: 'Noto Sans JP', sans-serif;
+  font-size: 0.76rem; cursor: pointer; letter-spacing: 0.05em; transition: all 0.2s;
+}
+.btn-save:hover { background: var(--accent2); }
+
+/* ── STEPS NAV ── */
+.steps-nav {
+  display: flex; padding: 0 32px;
+  border-bottom: 1px solid var(--border-soft);
+  background: var(--surface); overflow-x: auto; gap: 0;
+}
+
+.step-btn {
+  padding: 13px 16px; background: transparent;
+  border: none; border-bottom: 2.5px solid transparent;
+  color: var(--text3); font-family: 'Noto Sans JP', sans-serif;
+  font-size: 0.78rem; cursor: pointer; white-space: nowrap;
+  transition: all 0.2s; letter-spacing: 0.04em;
+}
+.step-btn:hover { color: var(--accent); }
+.step-btn.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 500; }
+
+/* ── CONTENT ── */
+.content { padding: 32px; flex: 1; }
+
+.panel { display: none; animation: fadeUp 0.22s ease; }
+.panel.active { display: block; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(5px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.panel-title {
+  font-family: 'Kaisei Tokumin', serif;
+  font-size: 1.2rem; font-weight: 700; color: var(--text); margin-bottom: 4px;
+}
+
+.panel-desc {
+  font-size: 0.82rem; color: var(--text2); margin-bottom: 22px; line-height: 1.85;
+}
+
+/* ── SECTION BOX ── */
+.section-box {
+  background: var(--surface); border: 1px solid var(--border-soft);
+  border-radius: 12px; padding: 20px 22px; margin-bottom: 18px;
+  box-shadow: 0 2px 7px var(--shadow);
+}
+
+.section-label {
+  font-size: 0.67rem; color: var(--text3); letter-spacing: 0.16em;
+  text-transform: uppercase; font-family: 'DM Serif Display', serif;
+  font-style: italic; margin-bottom: 13px;
+}
+
+/* ── STEP DIVIDER (inside panel 0) ── */
+.step-block { margin-bottom: 22px; }
+
+.step-block-title {
+  display: flex; align-items: center; gap: 9px;
+  font-family: 'Kaisei Tokumin', serif; font-size: 0.95rem;
+  font-weight: 700; color: var(--text); margin-bottom: 12px;
+}
+
+.step-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--accent); color: #fff; font-size: 0.65rem;
+  font-family: 'Noto Sans JP', sans-serif; font-weight: 700; flex-shrink: 0;
+}
+
+.step-block + .step-block {
+  border-top: 1px dashed var(--border-soft); padding-top: 20px;
+}
+
+/* ── CARD TAGS ── */
+.card-grid { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 12px; }
+
+.card {
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 13px; background: var(--bg2);
+  border: 1.5px solid var(--border-soft); border-radius: 18px;
+  cursor: pointer; transition: all 0.15s; user-select: none;
+  font-size: 0.82rem; color: var(--text2);
+}
+.card:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+.card.selected { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 500; }
+.card-icon { font-size: 0.95rem; }
+
+/* free input row */
+.free-row { display: flex; gap: 7px; align-items: center; margin-top: 6px; }
+.free-row input {
+  flex: 1; padding: 7px 13px; background: var(--surface);
+  border: 1.5px solid var(--border-soft); border-radius: 18px;
+  font-family: 'Noto Sans JP', sans-serif; font-size: 0.81rem; color: var(--text);
+  outline: none; transition: border-color 0.2s;
+}
+.free-row input:focus { border-color: var(--accent); }
+.free-row input::placeholder { color: var(--text3); }
+
+.add-btn {
+  padding: 7px 13px; background: var(--accent-soft);
+  border: 1.5px solid var(--accent); border-radius: 18px;
+  color: var(--accent); font-size: 0.76rem; cursor: pointer;
+  transition: all 0.15s; white-space: nowrap;
+}
+.add-btn:hover { background: var(--accent); color: #fff; }
+
+/* ── CHARACTERS SECTION ── */
+.char-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
+
+/* individual character card */
+.char-card {
+  background: var(--surface); border: 1.5px solid var(--border-soft);
+  border-radius: 11px; overflow: hidden;
+  box-shadow: 0 1px 5px var(--shadow); transition: border-color 0.15s;
+}
+.char-card:hover { border-color: var(--border); }
+
+.char-card-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 14px; cursor: pointer; user-select: none;
+}
+.char-card-icon { font-size: 1.2rem; flex-shrink: 0; }
+.char-card-name { flex: 1; font-size: 0.88rem; font-weight: 500; color: var(--text); }
+.char-card-type {
+  font-size: 0.66rem; padding: 2px 9px; border-radius: 10px;
+  background: var(--bg2); color: var(--text2); border: 1px solid var(--border-soft);
+  flex-shrink: 0;
+}
+.char-card-chevron {
+  font-size: 0.7rem; color: var(--text3); transition: transform 0.2s; flex-shrink: 0;
+}
+.char-card.open .char-card-chevron { transform: rotate(180deg); }
+
+.char-card-body {
+  display: none; padding: 0 14px 14px; border-top: 1px solid var(--border-soft);
+}
+.char-card.open .char-card-body { display: block; }
+
+.char-body-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 12px;
+}
+.char-body-field { display: flex; flex-direction: column; gap: 4px; }
+.char-body-label { font-size: 0.68rem; color: var(--text3); letter-spacing: 0.05em; }
+.char-body-input {
+  padding: 7px 11px; background: var(--bg);
+  border: 1.5px solid var(--border-soft); border-radius: 8px;
+  font-family: 'Noto Sans JP', sans-serif; font-size: 0.81rem; color: var(--text);
+  outline: none; transition: border-color 0.2s; width: 100%;
+}
+.char-body-input:focus { border-color: var(--accent); }
+.char-body-input::placeholder { color: var(--text3); }
+.char-body-textarea {
+  padding: 7px 11px; background: var(--bg);
+  border: 1.5px solid var(--border-soft); border-radius: 8px;
+  font-family: 'Noto Sans JP', sans-serif; font-size: 0.81rem; color: var(--text);
+  outline: none; transition: border-color 0.2s; width: 100%;
+  resize: vertical; min-height: 58px; line-height: 1.6;
+}
+.char-body-textarea:focus { border-color: var(--accent); }
+.char-body-textarea::placeholder { color: var(--text3); }
+.char-body-select {
+  padding: 7px 11px; background: var(--bg);
+  border: 1.5px solid var(--border-soft); border-radius: 8px;
+  font-family: 'Noto Sans JP', sans-serif; font-size: 0.81rem; color: var(--text);
+  outline: none; width: 100%;
+}
+.char-del-btn {
+  margin-top: 10px; padding: 5px 12px;
+  background: transparent; border: 1px solid rgba(192,58,58,0.3);
+  border-radius: 7px; color: #c03a3a; font-size: 0.74rem;
+  cursor: pointer; transition: all 0.15s;
+}
+.char-del-btn:hover { background: rgba(192,58,58,0.08); border-color: #c03a3a; }
+
+/* add character button */
+.add-char-btn {
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  width: 100%; padding: 11px;
+  background: var(--accent-soft); border: 1.5px dashed var(--accent);
+  border-radius: 10px; color: var(--accent);
+  font-family: 'Noto Sans JP', sans-serif; font-size: 0.82rem;
+  cursor: pointer; transition: all 0.2s; margin-bottom: 14px;
+}
+.add-char-btn:hover { background: var(--accent); color: #fff; border-style: solid; }
+
+/* type picker modal */
+.type-picker {
+  display: none; position: fixed; inset: 0;
+  background: rgba(50,30,10,0.25); z-index: 300;
+  align-items: center; justify-content: center; backdrop-filter: blur(3px);
+}
+.type-picker.open { display: flex; }
+.type-picker-box {
+  background: var(--surface); border: 1px solid var(--border-soft);
+  border-radius: 14px; padding: 24px 26px; width: 340px; max-width: 92%;
+  box-shadow: 0 8px 36px var(--shadow2);
+}
+.type-picker-title {
+  font-family: 'Kaisei Tokumin', serif; font-size: 1rem;
+  color: var(--text); margin-bottom: 16px;
+}
+.type-picker-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-bottom: 16px;
+}
+.type-option {
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+  padding: 14px 8px; background: var(--bg2);
+  border: 1.5px solid var(--border-soft); border-radius: 10px;
+  cursor: pointer; transition: all 0.15s; font-size: 0.81rem; color: var(--text2);
+}
+.type-option:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+.type-option-icon { font-size: 1.5rem; }
+.type-picker-cancel {
+  width: 100%; padding: 9px; background: var(--bg2);
+  border: 1px solid var(--border-soft); border-radius: 8px;
+  color: var(--text2); font-size: 0.79rem; cursor: pointer;
+}
+
+/* ── EMOTION TIMELINE ── */
+.emo-area {
+  min-height: 50px; background: var(--bg2); border: 1.5px solid var(--border-soft);
+  border-radius: 10px; padding: 11px 13px;
+  display: flex; flex-wrap: wrap; gap: 7px; align-items: center; margin-bottom: 12px;
+}
+
+.etag {
+  display: flex; align-items: center; gap: 5px;
+  padding: 5px 10px; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 13px; font-size: 0.78rem; color: var(--text); user-select: none;
+}
+.etag-x { cursor: pointer; color: var(--text3); font-size: 0.82rem; }
+.etag-x:hover { color: var(--pink); }
+.earrow { color: var(--text3); font-size: 0.7rem; }
+
+/* ── FORM FIELDS ── */
+.field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 4px; }
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field label { font-size: 0.72rem; color: var(--text2); letter-spacing: 0.05em; }
+.field input, .field select, .field textarea {
+  padding: 8px 12px; background: var(--surface);
+  border: 1.5px solid var(--border-soft); border-radius: 8px;
+  font-family: 'Noto Sans JP', sans-serif; font-size: 0.82rem; color: var(--text);
+  outline: none; transition: border-color 0.2s;
+}
+.field input:focus, .field select:focus, .field textarea:focus { border-color: var(--accent); }
+.field input::placeholder, .field textarea::placeholder { color: var(--text3); }
+.field textarea { resize: vertical; min-height: 76px; line-height: 1.7; }
+
+/* ── REFERENCE ── */
+.ref-list { display: flex; flex-direction: column; gap: 7px; margin-bottom: 10px; }
+.ref-item {
+  display: flex; align-items: flex-start; gap: 9px;
+  background: var(--bg2); border: 1px solid var(--border-soft);
+  border-radius: 8px; padding: 9px 11px; font-size: 0.81rem; color: var(--text);
+}
+.ref-icon { font-size: 0.95rem; flex-shrink: 0; margin-top: 1px; }
+.ref-text { flex: 1; line-height: 1.5; }
+.ref-del { cursor: pointer; color: var(--text3); font-size: 0.83rem; }
+.ref-del:hover { color: var(--pink); }
+
+/* ── WORD CHIPS ── */
+.word-cat-label {
+  font-size: 0.67rem; color: var(--text3); letter-spacing: 0.13em;
+  font-family: 'DM Serif Display', serif; font-style: italic;
+  margin: 14px 0 7px;
+}
+.chips-row { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 4px; }
+
+.chip {
+  padding: 5px 12px; border-radius: 13px; font-size: 0.79rem;
+  cursor: pointer; transition: all 0.14s; border: 1.5px solid;
+  background: #fff; user-select: none; color: var(--text);
+}
+.chip.jp { border-color: var(--border); }
+.chip.jp:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+.chip.en { color: var(--blue); border-color: rgba(58,100,144,0.32); }
+.chip.en:hover { border-color: var(--blue); background: var(--blue-soft); }
+.chip.idiom { color: var(--lavender); border-color: rgba(110,94,160,0.32); }
+.chip.idiom:hover { border-color: var(--lavender); background: var(--lav-soft); }
+.chip.key { color: var(--pink); border-color: rgba(168,88,112,0.32); }
+.chip.key:hover { border-color: var(--pink); background: var(--pink-soft); }
+
+/* ── WORD CARDS (panel-2) ── */
+.word-cards-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 4px;
+}
+.word-card {
+  background: var(--surface);
+  border: 1.5px solid var(--border-soft);
+  border-radius: 12px;
+  padding: 15px 16px;
+  box-shadow: 0 2px 7px var(--shadow);
+  display: flex; flex-direction: column; gap: 9px;
+  transition: border-color 0.15s;
+}
+.word-card:focus-within { border-color: var(--accent); }
+
+.word-card-header {
+  display: flex; align-items: center; gap: 8px;
+}
+.word-card-icon {
+  font-size: 1.1rem; flex-shrink: 0;
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 7px;
+}
+.word-card-title {
+  font-family: 'Kaisei Tokumin', serif;
+  font-size: 0.88rem; font-weight: 700;
+  color: var(--text); flex: 1;
+}
+.word-card-hint {
+  font-size: 0.68rem; color: var(--text3); line-height: 1.55; letter-spacing: 0.02em;
+}
+.word-card-textarea {
+  width: 100%;
+  min-height: 110px;
+  background: var(--bg);
+  border: 1.5px solid var(--border-soft);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 0.82rem; color: var(--text);
+  line-height: 1.85; resize: vertical;
+  outline: none; transition: border-color 0.2s;
+}
+.word-card-textarea:focus { border-color: var(--accent); }
+.word-card-textarea::placeholder { color: var(--text3); }
+
+/* accent bars per card type */
+.word-card[data-wcat="scene"]  { border-top: 3px solid var(--blue); }
+.word-card[data-wcat="emo"]    { border-top: 3px solid var(--pink); }
+.word-card[data-wcat="en"]     { border-top: 3px solid var(--sage); }
+.word-card[data-wcat="idiom"]  { border-top: 3px solid var(--lavender); }
+.word-card[data-wcat="rhyme"]  { border-top: 3px solid var(--accent); }
+
+.word-card[data-wcat="scene"] .word-card-icon  { background: var(--blue-soft); }
+.word-card[data-wcat="emo"]   .word-card-icon  { background: var(--pink-soft); }
+.word-card[data-wcat="en"]    .word-card-icon  { background: var(--sage-soft); }
+.word-card[data-wcat="idiom"] .word-card-icon  { background: var(--lav-soft); }
+.word-card[data-wcat="rhyme"] .word-card-icon  { background: var(--accent-soft); }
+
+/* char count badge */
+.word-card-count {
+  font-size: 0.63rem; color: var(--text3);
+  text-align: right; margin-top: -4px;
+}
+
+@media (max-width: 760px) {
+  .word-cards-grid { grid-template-columns: 1fr; }
+  .word-card-textarea { min-height: 90px; font-size: 16px !important; }
+}
+
+/* ── AI BOX ── */
+.ai-box {
+  background: linear-gradient(135deg, rgba(235,222,206,0.45), rgba(218,212,232,0.25));
+  border: 1px solid var(--border-soft); border-radius: 12px;
+  padding: 18px 20px; margin-top: 18px;
+}
+.ai-box-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 12px; gap: 10px; flex-wrap: wrap;
+}
+.ai-label {
+  font-size: 0.67rem; letter-spacing: 0.18em; color: var(--accent);
+  font-family: 'DM Serif Display', serif; font-style: italic;
+}
+.btn-suggest {
+  padding: 8px 18px; background: var(--accent); color: #fff;
+  border: none; border-radius: 18px; font-family: 'Noto Sans JP', sans-serif;
+  font-size: 0.77rem; cursor: pointer; transition: all 0.2s; letter-spacing: 0.04em;
+}
+.btn-suggest:hover { background: var(--accent2); transform: translateY(-1px); }
+
+.loading { display: flex; align-items: center; gap: 9px; color: var(--text2); font-size: 0.81rem; padding: 5px 0; }
+.dots span {
+  display: inline-block; width: 5px; height: 5px; border-radius: 50%;
+  background: var(--accent); margin: 0 2px;
+  animation: dp 1.2s ease-in-out infinite;
+}
+.dots span:nth-child(2) { animation-delay: 0.2s; }
+.dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes dp {
+  0%,80%,100% { opacity: 0.2; transform: scale(0.7); }
+  40% { opacity: 1; transform: scale(1); }
+}
+
+.ai-output { font-size: 0.84rem; line-height: 1.9; color: var(--text); }
+
+/* search sub-tabs inside "言葉を探す" */
+.word-subtabs { display: flex; gap: 7px; margin-bottom: 18px; flex-wrap: wrap; }
+.word-subtab {
+  padding: 6px 16px; border-radius: 16px; font-size: 0.78rem;
+  border: 1.5px solid var(--border-soft); background: var(--bg2);
+  color: var(--text2); cursor: pointer; transition: all 0.15s;
+}
+.word-subtab.active { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); font-weight: 500; }
+.word-subtab:hover { border-color: var(--accent); color: var(--accent); }
+
+.word-query-row { display: flex; gap: 8px; margin-bottom: 14px; }
+.word-query-row input {
+  flex: 1; padding: 9px 15px; background: var(--surface);
+  border: 1.5px solid var(--border-soft); border-radius: 20px;
+  font-family: 'Noto Sans JP', sans-serif; font-size: 0.88rem; color: var(--text);
+  outline: none; transition: border-color 0.2s;
+}
+.word-query-row input:focus { border-color: var(--accent); }
+.word-query-row input::placeholder { color: var(--text3); }
+
+/* ── RHYME ── */
+.rhyme-row { display: flex; gap: 9px; margin-bottom: 16px; }
+.rhyme-row input {
+  flex: 1; padding: 9px 15px; background: var(--surface);
+  border: 1.5px solid var(--border-soft); border-radius: 20px;
+  font-family: 'Noto Sans JP', sans-serif; font-size: 0.88rem; color: var(--text);
+  outline: none; transition: border-color 0.2s;
+}
+.rhyme-row input:focus { border-color: var(--accent); }
+.rhyme-row input::placeholder { color: var(--text3); }
+
+/* ── RHYME MEMO (v2) ── */
+.rhyme-cat-block {
+  margin-bottom: 14px;
+  background: var(--surface); border: 1px solid var(--border-soft);
+  border-radius: 11px; overflow: hidden;
+  box-shadow: 0 1px 5px var(--shadow);
+}
+.rhyme-cat-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 16px; cursor: pointer; user-select: none;
+  background: var(--bg2); border-bottom: 1px solid var(--border-soft);
+}
+.rhyme-cat-icon { font-size: 1rem; flex-shrink: 0; }
+.rhyme-cat-name {
+  flex: 1; font-family: 'Kaisei Tokumin', serif;
+  font-size: 0.9rem; font-weight: 700; color: var(--text);
+}
+.rhyme-cat-reading {
+  font-size: 0.67rem; color: var(--text3); letter-spacing: 0.12em;
+  font-family: 'DM Serif Display', serif; font-style: italic;
+}
+.rhyme-cat-chevron {
+  font-size: 0.68rem; color: var(--text3); transition: transform 0.2s; flex-shrink: 0;
+}
+.rhyme-cat-block.open .rhyme-cat-chevron { transform: rotate(180deg); }
+.rhyme-cat-body { display: none; padding: 14px 16px 16px; }
+.rhyme-cat-block.open .rhyme-cat-body { display: block; }
+
+.rhyme-example-row {
+  display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px;
+}
+.rhyme-example-chip {
+  padding: 4px 12px; border-radius: 12px; font-size: 0.78rem;
+  background: var(--bg2); border: 1.5px solid var(--border-soft);
+  color: var(--text2); cursor: pointer; transition: all 0.13s; user-select: none;
+}
+.rhyme-example-chip:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+.rhyme-example-chip.en  { color: var(--blue); border-color: rgba(58,100,144,0.32); }
+.rhyme-example-chip.en:hover { border-color: var(--blue); background: var(--blue-soft); color: var(--blue); }
+
+.rhyme-words-area {
+  min-height: 42px; background: var(--bg);
+  border: 1.5px solid var(--border-soft); border-radius: 8px;
+  padding: 8px 11px; display: flex; flex-wrap: wrap;
+  gap: 6px; align-items: center; margin-bottom: 10px; cursor: text;
+}
+.rhyme-word-tag {
+  display: flex; align-items: center; gap: 5px;
+  padding: 4px 10px; background: var(--surface);
+  border: 1px solid var(--border); border-radius: 11px;
+  font-size: 0.78rem; color: var(--text);
+}
+.rhyme-word-tag.en-tag { color: var(--blue); border-color: rgba(58,100,144,0.32); background: var(--blue-soft); }
+.rhyme-word-x { cursor: pointer; color: var(--text3); font-size: 0.8rem; }
+.rhyme-word-x:hover { color: var(--pink); }
+
+.rhyme-add-row { display: flex; gap: 7px; align-items: center; }
+.rhyme-add-input {
+  flex: 1; padding: 7px 13px; background: var(--surface);
+  border: 1.5px solid var(--border-soft); border-radius: 18px;
+  font-family: 'Noto Sans JP', sans-serif; font-size: 0.81rem; color: var(--text);
+  outline: none; transition: border-color 0.2s;
+}
+.rhyme-add-input:focus { border-color: var(--accent); }
+.rhyme-add-input::placeholder { color: var(--text3); }
+
+/* ── LYRIC ── */
+.lyric-toolbar { display: flex; gap: 7px; margin-bottom: 11px; flex-wrap: wrap; align-items: center; }
+.lyric-editor {
+  width: 100%; min-height: 300px;
+  background: #fff; border: 1.5px solid var(--border-soft); border-radius: 10px;
+  padding: 20px 22px; font-family: 'Kaisei Tokumin', serif; font-size: 1rem;
+  line-height: 2.2; color: var(--text); outline: none; resize: vertical;
+  transition: border-color 0.2s; box-shadow: inset 0 1px 4px var(--shadow);
+}
+.lyric-editor:focus { border-color: var(--accent); }
+
+/* ── SUMMARY ── */
+.summary-row { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; margin-bottom: 18px; }
+.sum-card {
+  background: #fff; border: 1px solid var(--border-soft); border-radius: 10px;
+  padding: 13px 15px; box-shadow: 0 1px 4px var(--shadow);
+}
+.sum-card-label { font-size: 0.65rem; color: var(--accent); letter-spacing: 0.14em; font-family: 'DM Serif Display', serif; font-style: italic; margin-bottom: 6px; }
+.sum-card-value { font-size: 0.82rem; color: var(--text); line-height: 1.75; }
+
+/* ── MODAL ── */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(50,30,10,0.28); z-index: 200;
+  display: flex; align-items: center; justify-content: center; backdrop-filter: blur(3px);
+}
+.modal-overlay.hidden { display: none; }
+.modal {
+  background: var(--surface); border: 1px solid var(--border-soft); border-radius: 14px;
+  padding: 26px 30px; max-width: 350px; width: 90%; box-shadow: 0 8px 36px var(--shadow2);
+}
+.modal h3 { font-family: 'Kaisei Tokumin', serif; margin-bottom: 9px; color: var(--text); }
+.modal p { font-size: 0.82rem; color: var(--text2); margin-bottom: 20px; line-height: 1.7; }
+.modal-btns { display: flex; gap: 9px; justify-content: flex-end; }
+.btn-cancel { padding: 7px 16px; background: var(--bg2); border: 1px solid var(--border); border-radius: 7px; color: var(--text2); cursor: pointer; font-size: 0.79rem; }
+.btn-delete { padding: 7px 16px; background: #c03a3a; border: none; border-radius: 7px; color: #fff; cursor: pointer; font-size: 0.79rem; }
+
+/* ── SECTION PATTERN PICKER ── */
+.pattern-picker-area {
+  background: var(--surface); border: 1px solid var(--border-soft);
+  border-radius: 12px; padding: 18px 20px; margin-bottom: 18px;
+  box-shadow: 0 2px 7px var(--shadow);
+}
+.pattern-picker-label {
+  font-size: 0.67rem; color: var(--text3); letter-spacing: 0.16em;
+  text-transform: uppercase; font-family: 'DM Serif Display', serif;
+  font-style: italic; margin-bottom: 12px;
+}
+.pattern-genre-tabs {
+  display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px;
+}
+.pattern-genre-tab {
+  padding: 5px 14px; border-radius: 14px; font-size: 0.75rem;
+  border: 1.5px solid var(--border-soft); background: var(--bg2);
+  color: var(--text2); cursor: pointer; transition: all 0.15s; white-space: nowrap;
+}
+.pattern-genre-tab.active { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); font-weight: 500; }
+.pattern-genre-tab:hover { border-color: var(--accent); color: var(--accent); }
+
+.pattern-cards-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 9px; margin-bottom: 12px;
+}
+.pattern-card {
+  background: var(--bg); border: 1.5px solid var(--border-soft); border-radius: 10px;
+  padding: 12px 14px; cursor: pointer; transition: all 0.15s; position: relative;
+}
+.pattern-card:hover { border-color: var(--accent); background: var(--accent-soft); }
+.pattern-card.selected { border-color: var(--accent); background: var(--accent-soft); }
+.pattern-card.selected::after {
+  content: '✓'; position: absolute; top: 8px; right: 10px;
+  color: var(--accent); font-size: 0.78rem; font-weight: 700;
+}
+.pattern-card-name {
+  font-size: 0.82rem; font-weight: 500; color: var(--text); margin-bottom: 5px;
+}
+.pattern-card-seq {
+  font-size: 0.7rem; color: var(--text3); line-height: 1.6; font-family: 'DM Serif Display', serif; font-style: italic;
+}
+.pattern-apply-btn {
+  padding: 8px 20px; background: var(--accent); color: #fff;
+  border: none; border-radius: 18px; font-family: 'Noto Sans JP', sans-serif;
+  font-size: 0.78rem; cursor: pointer; transition: all 0.2s; letter-spacing: 0.04em;
+}
+.pattern-apply-btn:hover { background: var(--accent2); transform: translateY(-1px); }
+.pattern-apply-row {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.pattern-apply-note {
+  font-size: 0.71rem; color: var(--text3); line-height: 1.5;
+}
+
+/* ── STRUCTURED LYRIC SECTIONS ── */
+.lyric-sections { display: flex; flex-direction: column; gap: 14px; margin-bottom: 14px; }
+
+.lyric-section {
+  background: var(--surface); border: 1.5px solid var(--border-soft);
+  border-radius: 10px; overflow: hidden; box-shadow: 0 1px 4px var(--shadow);
+  transition: border-color 0.15s;
+}
+.lyric-section:focus-within { border-color: var(--border); }
+
+.lyric-section-header {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px; background: var(--bg2);
+  border-bottom: 1px solid var(--border-soft);
+}
+.lyric-section-badge {
+  padding: 2px 10px; border-radius: 10px; font-size: 0.69rem; font-weight: 600;
+  font-family: 'DM Serif Display', serif; font-style: italic; white-space: nowrap;
+  flex-shrink: 0;
+}
+.badge-verse    { background: var(--blue-soft); color: var(--blue); border: 1px solid rgba(58,100,144,0.25); }
+.badge-chorus   { background: var(--pink-soft); color: var(--pink); border: 1px solid rgba(168,88,112,0.25); }
+.badge-bridge   { background: var(--lav-soft);  color: var(--lavender); border: 1px solid rgba(110,94,160,0.25); }
+.badge-pre      { background: var(--sage-soft); color: var(--sage); border: 1px solid rgba(78,122,96,0.25); }
+.badge-intro    { background: var(--accent-soft); color: var(--accent); border: 1px solid rgba(140,94,60,0.25); }
+.badge-outro    { background: var(--accent-soft); color: var(--accent2); border: 1px solid rgba(140,94,60,0.22); }
+.badge-interlude { background: var(--bg2); color: var(--text2); border: 1px solid var(--border); }
+.badge-rap      { background: rgba(30,20,60,0.08); color: #3a2860; border: 1px solid rgba(58,40,96,0.22); }
+.badge-drop     { background: rgba(180,60,60,0.09); color: #9a2020; border: 1px solid rgba(180,60,60,0.22); }
+.badge-hook     { background: rgba(60,130,80,0.10); color: #1e5a30; border: 1px solid rgba(60,130,80,0.22); }
+.badge-skit     { background: var(--bg2); color: var(--text3); border: 1px solid var(--border-soft); }
+
+.lyric-section-label-input {
+  flex: 1; font-size: 0.73rem; color: var(--text2); background: transparent;
+  border: none; outline: none; font-family: 'Noto Sans JP', sans-serif;
+  min-width: 60px;
+}
+.lyric-section-label-input::placeholder { color: var(--text3); }
+
+.lyric-section-actions { display: flex; gap: 4px; margin-left: auto; }
+.lyric-sec-btn {
+  width: 24px; height: 24px; border-radius: 5px; border: none;
+  background: transparent; cursor: pointer; font-size: 0.82rem; color: var(--text3);
+  display: flex; align-items: center; justify-content: center; transition: all 0.13s;
+  flex-shrink: 0;
+}
+.lyric-sec-btn:hover { background: var(--surface2); color: var(--text); }
+.lyric-sec-btn.del:hover { color: var(--pink); }
+
+.lyric-section-textarea {
+  width: 100%; padding: 12px 14px;
+  background: #fff; border: none; outline: none; resize: none;
+  font-family: 'Kaisei Tokumin', serif; font-size: 0.97rem;
+  line-height: 2.1; color: var(--text); min-height: 90px;
+}
+.lyric-section-textarea::placeholder { color: var(--text3); font-size: 0.85rem; }
+
+/* add-section row */
+.add-section-row {
+  display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 12px;
+}
+.add-section-chip {
+  padding: 5px 13px; border-radius: 13px; font-size: 0.76rem;
+  border: 1.5px dashed var(--border); background: var(--bg2);
+  color: var(--text2); cursor: pointer; transition: all 0.14s; white-space: nowrap;
+}
+.add-section-chip:hover { border-style: solid; border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+
+/* lyric mode toggle */
+.lyric-mode-toggle {
+  display: flex; background: var(--bg2); border-radius: 20px;
+  border: 1px solid var(--border-soft); padding: 2px; gap: 2px; margin-bottom: 12px;
+}
+.lyric-mode-btn {
+  flex: 1; padding: 6px 12px; border-radius: 16px; border: none;
+  background: transparent; font-family: 'Noto Sans JP', sans-serif;
+  font-size: 0.74rem; color: var(--text3); cursor: pointer; transition: all 0.18s;
+  white-space: nowrap;
+}
+.lyric-mode-btn.active { background: var(--surface); color: var(--accent); font-weight: 500; box-shadow: 0 1px 4px var(--shadow); }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 26px; right: 26px;
+  background: var(--accent); color: #fff; padding: 9px 17px;
+  border-radius: 18px; font-size: 0.77rem; opacity: 0;
+  transform: translateY(8px); transition: all 0.28s; pointer-events: none; z-index: 1000;
+  box-shadow: 0 4px 14px rgba(140,94,60,0.28);
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+
+.empty-state {
+  text-align: center; padding: 60px 20px;
+  color: var(--text3); font-size: 0.84rem; line-height: 2.2;
+}
+.empty-state .big { font-size: 2.2rem; margin-bottom: 10px; }
+
+/* ── VERSION MANAGER ── */
+.ver-bar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 0 14px; flex-wrap: wrap;
+}
+.ver-tab {
+  display: flex; align-items: center; gap: 5px;
+  padding: 6px 13px; border-radius: 16px; font-size: 0.78rem;
+  border: 1.5px solid var(--border-soft); background: var(--bg2);
+  color: var(--text2); cursor: pointer; transition: all 0.15s;
+  white-space: nowrap; position: relative;
+}
+.ver-tab:hover { border-color: var(--accent); color: var(--accent); }
+.ver-tab.active { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); font-weight: 500; }
+.ver-tab-del {
+  font-size: 0.75rem; color: var(--text3); margin-left: 2px;
+  display: none; cursor: pointer;
+}
+.ver-tab:hover .ver-tab-del { display: inline; }
+.ver-tab-del:hover { color: var(--pink); }
+.ver-add-btn {
+  padding: 6px 12px; border-radius: 16px; font-size: 0.78rem;
+  border: 1.5px dashed var(--accent); background: transparent;
+  color: var(--accent); cursor: pointer; transition: all 0.15s; white-space: nowrap;
+}
+.ver-add-btn:hover { background: var(--accent); color: #fff; border-style: solid; }
+.ver-copy-btn {
+  padding: 6px 12px; border-radius: 16px; font-size: 0.75rem;
+  border: 1.5px solid var(--border-soft); background: var(--bg2);
+  color: var(--text2); cursor: pointer; transition: all 0.15s; white-space: nowrap; margin-left: auto;
+}
+.ver-copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── LYRIC LAYOUT with SIDE NOTE ── */
+.lyric-workspace {
+  display: grid;
+  grid-template-columns: 1fr 260px;
+  gap: 16px;
+  align-items: start;
+}
+.lyric-main-col { min-width: 0; }
+.side-note-col {
+  position: sticky; top: 72px;
+}
+.side-note-box {
+  background: var(--surface); border: 1.5px solid var(--border-soft);
+  border-radius: 12px; padding: 14px 15px;
+  box-shadow: 0 2px 7px var(--shadow);
+}
+.side-note-label {
+  font-size: 0.65rem; color: var(--accent); letter-spacing: 0.16em;
+  font-family: 'DM Serif Display', serif; font-style: italic;
+  margin-bottom: 8px; display: block;
+}
+.side-note-textarea {
+  width: 100%; min-height: 200px;
+  background: var(--bg); border: 1.5px solid var(--border-soft);
+  border-radius: 8px; padding: 10px 12px;
+  font-family: 'Noto Sans JP', sans-serif; font-size: 0.8rem;
+  color: var(--text); line-height: 1.8; resize: vertical; outline: none;
+  transition: border-color 0.2s;
+}
+.side-note-textarea:focus { border-color: var(--accent); }
+.side-note-textarea::placeholder { color: var(--text3); }
+.side-note-charcount { font-size: 0.63rem; color: var(--text3); text-align: right; margin-top: 5px; }
+
+/* mobile: stack side note below editor */
+@media (max-width: 900px) {
+  .lyric-workspace { grid-template-columns: 1fr; }
+  .side-note-col { position: static; }
+}
+
+/* scrollbar */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+/* ── BOTTOM NAV (mobile only) ── */
+.bottom-nav {
+  display: none;
+}
+
+/* ── SONG DRAWER (mobile) ── */
+.song-drawer-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(40,20,5,0.38); z-index: 400;
+  backdrop-filter: blur(3px);
+}
+.song-drawer-overlay.open { display: block; }
+
+.song-drawer {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 401;
+  background: var(--surface); border-radius: 20px 20px 0 0;
+  padding: 0 0 env(safe-area-inset-bottom,0);
+  box-shadow: 0 -6px 32px rgba(80,50,20,0.18);
+  transform: translateY(100%);
+  transition: transform 0.32s cubic-bezier(0.32,0.72,0,1);
+  max-height: 75vh; display: flex; flex-direction: column;
+}
+.song-drawer.open { transform: translateY(0); }
+
+.drawer-handle {
+  width: 36px; height: 4px; border-radius: 2px;
+  background: var(--border); margin: 12px auto 0; flex-shrink: 0;
+}
+.drawer-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 20px 10px; flex-shrink: 0;
+}
+.drawer-title {
+  font-family: 'Kaisei Tokumin', serif; font-size: 1rem; color: var(--text);
+}
+.drawer-new-btn {
+  padding: 8px 16px; background: var(--accent); color: #fff;
+  border: none; border-radius: 20px; font-size: 0.8rem;
+  font-family: 'Noto Sans JP', sans-serif; cursor: pointer;
+  min-height: 44px;
+}
+.drawer-song-list {
+  flex: 1; overflow-y: auto; padding: 6px 14px 20px;
+}
+.drawer-song-list .song-item {
+  padding: 13px 14px; min-height: 56px;
+}
+
+@media (max-width: 760px) {
+  /* サイドバーを隠す */
+  .sidebar { display: none; }
+
+  /* ボトムナビを表示 */
+  .bottom-nav {
+    display: flex;
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 300;
+    background: rgba(250,247,242,0.97); backdrop-filter: blur(12px);
+    border-top: 1px solid var(--border-soft);
+    padding: 8px 0 env(safe-area-inset-bottom, 8px);
+    box-shadow: 0 -2px 12px rgba(80,50,20,0.08);
+  }
+  .bottom-nav-btn {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; gap: 3px;
+    padding: 6px 4px; min-height: 48px;
+    background: none; border: none; cursor: pointer;
+    color: var(--text3); font-family: 'Noto Sans JP', sans-serif;
+    font-size: 0.62rem; letter-spacing: 0.03em;
+    transition: color 0.15s;
+  }
+  .bottom-nav-btn:active { opacity: 0.6; }
+  .bottom-nav-btn.active { color: var(--accent); }
+  .bottom-nav-icon { font-size: 1.35rem; line-height: 1; }
+
+  /* メインにボトムナビ分の余白 */
+  .main { padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px)); }
+
+  /* レイアウト調整 */
+  .field-grid { grid-template-columns: 1fr; }
+  .summary-row { grid-template-columns: 1fr; }
+  .char-body-grid { grid-template-columns: 1fr !important; }
+  .content { padding: 16px 14px; }
+  .topbar { padding: 10px 14px; gap: 8px; }
+  .steps-nav { padding: 0 8px; }
+
+  /* フォントをiOS自動ズーム防止サイズに */
+  .field input, .field select, .field textarea,
+  .free-row input, .char-body-input, .char-body-textarea,
+  .char-body-select, .word-query-row input, .rhyme-add-input,
+  .song-title-input { font-size: 16px !important; }
+
+  /* タップ領域を44px以上に */
+  .card {
+    padding: 10px 14px; min-height: 44px;
+  }
+  .add-btn, .btn-suggest, .btn-save, .btn-icon {
+    min-height: 44px;
+  }
+  .btn-icon { width: 44px; height: 44px; font-size: 1.1rem; }
+  .step-btn { padding: 14px 12px; font-size: 0.76rem; }
+  .add-char-btn { min-height: 52px; font-size: 0.88rem; }
+  .type-option { padding: 18px 8px; min-height: 80px; }
+
+  /* パネルタイトル */
+  .panel-title { font-size: 1.1rem; }
+  .panel-desc  { font-size: 0.8rem; }
+
+  /* 歌詞エディター */
+  .lyric-editor { font-size: 1rem; min-height: 220px; line-height: 2; }
+
+  /* サマリー */
+  .summary-row { grid-template-columns: 1fr; }
+
+  /* ワードチップ */
+  .chip { padding: 7px 14px; font-size: 0.82rem; min-height: 36px; }
+
+  /* 感情タイムライン */
+  .etag { padding: 8px 12px; font-size: 0.82rem; min-height: 36px; }
+
+  /* Toast を下から少し上に */
+  .toast { bottom: calc(76px + env(safe-area-inset-bottom, 0px)); right: 16px; }
+
+  /* empty state */
+  .empty-state { padding-top: 100px; }
+
+  /* pattern picker */
+  .pattern-cards-grid { grid-template-columns: 1fr 1fr !important; }
+  .pattern-genre-tab { font-size: 0.72rem; padding: 5px 10px; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">✿ Lyrica</div>
+      <div class="logo-sub">作詞ノート</div>
+    </div>
+    <div class="sidebar-sec-label">曲のストック</div>
+    <button class="new-song-btn" onclick="newSong()">＋ 新しい曲を作る</button>
+    <div class="song-list" id="song-list"></div>
+  </aside>
+
+  <!-- ── MAIN ── -->
+  <main class="main">
+    <div id="empty-view" class="empty-state" style="display:none;">
+      <div class="big">🎵</div>
+      <div>「新しい曲を作る」ボタンから始めましょう</div>
+    </div>
+
+    <div id="editor-view">
+
+      <!-- TOPBAR -->
+      <div class="topbar">
+        <input class="song-title-input" id="song-title-input"
+          placeholder="タイトル、または仮タイトルをつける…" oninput="onTitleChange()" />
+        <div class="topbar-actions">
+          <button class="btn-icon" onclick="confirmDelete()" title="削除">🗑</button>
+          <button class="btn-save" onclick="saveSong()">保存</button>
+        </div>
+      </div>
+
+      <!-- STEPS NAV -->
+      <nav class="steps-nav">
+        <button class="step-btn active"  onclick="goStep(0)">🎨 世界観をつくる</button>
+        <button class="step-btn"         onclick="goStep(1)">📖 参考作品</button>
+        <button class="step-btn"         onclick="goStep(2)">✏️ 言葉メモ</button>
+        <button class="step-btn"         onclick="goStep(3)">🎶 ライムメモ</button>
+        <button class="step-btn"         onclick="goStep(4)">📝 作詞する</button>
+      </nav>
+
+      <div class="content">
+
+        <!-- ══════════════════════════════════════
+             PANEL 0 : 世界観をつくる
+             テーマ → シーン → 登場人物 → 感情の流れ
+        ══════════════════════════════════════ -->
+        <div class="panel active" id="panel-0">
+          <div class="panel-title">世界観をつくる</div>
+          <div class="panel-desc">テーマ・シーン・登場人物・感情の流れを順番に決めましょう。タグを選ぶか、自由に書き込んでください。</div>
+
+          <div class="section-box">
+
+            <!-- ① テーマ -->
+            <div class="step-block">
+              <div class="step-block-title"><span class="step-badge">1</span>テーマ</div>
+              <div class="card-grid" id="theme-cards">
+                <div class="card" onclick="toggleTag(this,'theme','恋愛')"><span class="card-icon">💗</span>恋愛</div>
+                <div class="card" onclick="toggleTag(this,'theme','失恋')"><span class="card-icon">💔</span>失恋</div>
+                <div class="card" onclick="toggleTag(this,'theme','成長')"><span class="card-icon">🌱</span>成長</div>
+                <div class="card" onclick="toggleTag(this,'theme','孤独')"><span class="card-icon">🌙</span>孤独</div>
+                <div class="card" onclick="toggleTag(this,'theme','友情')"><span class="card-icon">🤝</span>友情</div>
+                <div class="card" onclick="toggleTag(this,'theme','希望')"><span class="card-icon">🌅</span>希望</div>
+                <div class="card" onclick="toggleTag(this,'theme','別れ')"><span class="card-icon">🚉</span>別れ</div>
+                <div class="card" onclick="toggleTag(this,'theme','青春')"><span class="card-icon">🎆</span>青春</div>
+                <div class="card" onclick="toggleTag(this,'theme','挑戦')"><span class="card-icon">⚡</span>挑戦</div>
+                <div class="card" onclick="toggleTag(this,'theme','自由')"><span class="card-icon">🕊</span>自由</div>
+                <div class="card" onclick="toggleTag(this,'theme','死と再生')"><span class="card-icon">🌸</span>死と再生</div>
+                <div class="card" onclick="toggleTag(this,'theme','郷愁')"><span class="card-icon">🏡</span>郷愁</div>
+              </div>
+              <div class="free-row">
+                <input type="text" placeholder="その他・自由入力（例：嫉妬、依存、赦し）" id="theme-free" onkeydown="if(event.key==='Enter')addFreeTag('theme','theme-free','theme-cards')" />
+                <button class="add-btn" onclick="addFreeTag('theme','theme-free','theme-cards')">＋ 追加</button>
+              </div>
+            </div>
+
+            <!-- ② シーン -->
+            <div class="step-block">
+              <div class="step-block-title"><span class="step-badge">2</span>シーン・舞台</div>
+              <div class="card-grid" id="scene-cards">
+                <div class="card" onclick="toggleTag(this,'scene','深夜の部屋')"><span class="card-icon">🌃</span>深夜の部屋</div>
+                <div class="card" onclick="toggleTag(this,'scene','雨の中')"><span class="card-icon">🌧</span>雨の中</div>
+                <div class="card" onclick="toggleTag(this,'scene','夕暮れの海岸')"><span class="card-icon">🌊</span>夕暮れの海岸</div>
+                <div class="card" onclick="toggleTag(this,'scene','電車の中')"><span class="card-icon">🚃</span>電車の中</div>
+                <div class="card" onclick="toggleTag(this,'scene','桜の下')"><span class="card-icon">🌸</span>桜の下</div>
+                <div class="card" onclick="toggleTag(this,'scene','夏の祭り')"><span class="card-icon">🎇</span>夏の祭り</div>
+                <div class="card" onclick="toggleTag(this,'scene','雪景色')"><span class="card-icon">❄</span>雪景色</div>
+                <div class="card" onclick="toggleTag(this,'scene','都会の夜')"><span class="card-icon">🏙</span>都会の夜</div>
+                <div class="card" onclick="toggleTag(this,'scene','古い部屋')"><span class="card-icon">📦</span>古い部屋</div>
+                <div class="card" onclick="toggleTag(this,'scene','星空の下')"><span class="card-icon">✨</span>星空の下</div>
+                <div class="card" onclick="toggleTag(this,'scene','教室')"><span class="card-icon">🏫</span>教室</div>
+                <div class="card" onclick="toggleTag(this,'scene','異国の街')"><span class="card-icon">✈</span>異国の街</div>
+              </div>
+              <div class="free-row">
+                <input type="text" placeholder="その他・自由入力（例：朝の台所、廃線の駅、砂漠）" id="scene-free" onkeydown="if(event.key==='Enter')addFreeTag('scene','scene-free','scene-cards')" />
+                <button class="add-btn" onclick="addFreeTag('scene','scene-free','scene-cards')">＋ 追加</button>
+              </div>
+            </div>
+
+            <!-- ③ 登場人物 -->
+            <div class="step-block">
+              <div class="step-block-title"><span class="step-badge">3</span>登場人物・存在</div>
+              <div style="font-size:0.78rem;color:var(--text2);margin-bottom:13px;line-height:1.7;">
+                人・動物・植物・自然現象など、曲に登場する"存在"を何人でも追加できます。
+              </div>
+
+              <!-- character cards list -->
+              <div class="char-list" id="char-list"></div>
+
+              <!-- add button -->
+              <button class="add-char-btn" onclick="openTypePicker()">
+                ＋ キャラクターを追加する
+              </button>
+
+              <!-- story memo -->
+              <div class="field" style="margin-top:4px;">
+                <label>ストーリー・状況のメモ</label>
+                <textarea id="char-story" placeholder="例：卒業式の日、ずっと想いを伝えられなかった人への言葉。校庭の桜の木の下に佇む猫だけが、その秘密を知っていた。"></textarea>
+              </div>
+            </div>
+
+            <!-- ④ 感情の流れ -->
+            <div class="step-block">
+              <div class="step-block-title"><span class="step-badge">4</span>感情の流れ</div>
+              <div class="card-grid">
+                <div class="card" onclick="addEmo('切なさ','💧')"><span class="card-icon">💧</span>切なさ</div>
+                <div class="card" onclick="addEmo('怒り','🔥')"><span class="card-icon">🔥</span>怒り</div>
+                <div class="card" onclick="addEmo('喜び','✨')"><span class="card-icon">✨</span>喜び</div>
+                <div class="card" onclick="addEmo('迷い','🌀')"><span class="card-icon">🌀</span>迷い</div>
+                <div class="card" onclick="addEmo('諦め','🍂')"><span class="card-icon">🍂</span>諦め</div>
+                <div class="card" onclick="addEmo('覚悟','⚔')"><span class="card-icon">⚔</span>覚悟</div>
+                <div class="card" onclick="addEmo('解放','🕊')"><span class="card-icon">🕊</span>解放</div>
+                <div class="card" onclick="addEmo('愛しさ','💛')"><span class="card-icon">💛</span>愛しさ</div>
+                <div class="card" onclick="addEmo('虚無','🌫')"><span class="card-icon">🌫</span>虚無</div>
+                <div class="card" onclick="addEmo('焦燥','⏱')"><span class="card-icon">⏱</span>焦燥</div>
+                <div class="card" onclick="addEmo('静けさ','🌿')"><span class="card-icon">🌿</span>静けさ</div>
+                <div class="card" onclick="addEmo('高揚','🚀')"><span class="card-icon">🚀</span>高揚</div>
+              </div>
+              <div class="free-row" style="margin-bottom:12px;">
+                <input type="text" placeholder="その他（例：罪悪感、懐かしさ、嫉妬）" id="emo-free" onkeydown="if(event.key==='Enter')addFreeEmo()" />
+                <button class="add-btn" onclick="addFreeEmo()">＋ 追加</button>
+              </div>
+              <div style="font-size:0.7rem;color:var(--text3);margin-bottom:7px;">感情の流れ（追加した順。× で削除）</div>
+              <div class="emo-area" id="emo-timeline"><span style="color:var(--text3);font-size:0.77rem;">タグを追加してください</span></div>
+            </div>
+
+          </div><!-- /section-box -->
+        </div><!-- /panel-0 -->
+
+        <!-- ══════════════════════════════════════
+             PANEL 1 : 参考作品
+        ══════════════════════════════════════ -->
+        <div class="panel" id="panel-1">
+          <div class="panel-title">参考にしたい作品</div>
+          <div class="panel-desc">雰囲気の近い曲・映画・詩・小説などを書き留めておきましょう。雰囲気のヒントとして書き留めておきましょう。</div>
+          <div class="section-box">
+            <div class="section-label">References</div>
+            <div class="ref-list" id="ref-list"></div>
+            <div class="free-row" style="flex-wrap:wrap;gap:8px;margin-bottom:10px;">
+              <select id="ref-type" style="padding:7px 11px;background:var(--surface);border:1.5px solid var(--border-soft);border-radius:18px;font-size:0.78rem;color:var(--text);outline:none;">
+                <option>🎵 曲</option>
+                <option>🎬 映画・ドラマ</option>
+                <option>📚 小説・本</option>
+                <option>📝 詩・歌詞</option>
+                <option>🎨 アート・写真</option>
+                <option>✎ その他</option>
+              </select>
+              <input type="text" id="ref-input" placeholder="作品名・アーティスト名・気になる点など" style="flex:1;min-width:180px;padding:7px 13px;background:var(--surface);border:1.5px solid var(--border-soft);border-radius:18px;font-family:'Noto Sans JP',sans-serif;font-size:0.81rem;color:var(--text);outline:none;" onkeydown="if(event.key==='Enter')addRef()" />
+              <button class="add-btn" onclick="addRef()">＋ 追加</button>
+            </div>
+            <div style="font-size:0.74rem;color:var(--text3);line-height:1.85;">
+              💡 ヒント：具体的に書くほど提案の精度が上がります。<br>
+              例：「米津玄師 / Lemon — 静かなリズムと情景描写が好き」
+            </div>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════════════
+             PANEL 2 : 言葉メモ
+        ══════════════════════════════════════ -->
+        <div class="panel" id="panel-2">
+          <div class="panel-title">言葉メモ</div>
+          <div class="panel-desc">カテゴリ別に言葉・フレーズをメモしましょう。歌詞エディターへのヒントになります。</div>
+          <div class="word-cards-grid" id="word-cards-grid">
+
+            <!-- 情景ワード -->
+            <div class="word-card" data-wcat="scene">
+              <div class="word-card-header">
+                <span class="word-card-icon">🌅</span>
+                <span class="word-card-title">情景ワード</span>
+              </div>
+              <div class="word-card-hint">風景・色・光・天気など、目に浮かぶ言葉</div>
+              <textarea class="word-card-textarea" id="wc-scene"
+                placeholder="例：&#10;薄明かり　余韻　滲む&#10;霧雨　夕凪　残像"
+                oninput="saveWordCard('scene',this)"></textarea>
+              <div class="word-card-count" id="wcc-scene">0文字</div>
+            </div>
+
+            <!-- 感情ワード -->
+            <div class="word-card" data-wcat="emo">
+              <div class="word-card-header">
+                <span class="word-card-icon">💗</span>
+                <span class="word-card-title">感情ワード</span>
+              </div>
+              <div class="word-card-hint">気持ち・感覚・心の動きを表す言葉</div>
+              <textarea class="word-card-textarea" id="wc-emo"
+                placeholder="例：&#10;切なさ　もどかしい&#10;あどけない　眩しい"
+                oninput="saveWordCard('emo',this)"></textarea>
+              <div class="word-card-count" id="wcc-emo">0文字</div>
+            </div>
+
+            <!-- 英語フレーズ -->
+            <div class="word-card" data-wcat="en">
+              <div class="word-card-header">
+                <span class="word-card-icon">🌿</span>
+                <span class="word-card-title">英語フレーズ</span>
+              </div>
+              <div class="word-card-hint">サビや間奏に使いたい英語表現</div>
+              <textarea class="word-card-textarea" id="wc-en"
+                placeholder="例：&#10;lonely night&#10;fading away&#10;I still love you"
+                oninput="saveWordCard('en',this)"></textarea>
+              <div class="word-card-count" id="wcc-en">0文字</div>
+            </div>
+
+            <!-- 慣用句・詩的表現 -->
+            <div class="word-card" data-wcat="idiom">
+              <div class="word-card-header">
+                <span class="word-card-icon">✦</span>
+                <span class="word-card-title">慣用句・詩的表現</span>
+              </div>
+              <div class="word-card-hint">比喩・ことわざ・詩的なフレーズ</div>
+              <textarea class="word-card-textarea" id="wc-idiom"
+                placeholder="例：&#10;月に叢雲、花に風&#10;消えない傷のように&#10;時よ止まれ"
+                oninput="saveWordCard('idiom',this)"></textarea>
+              <div class="word-card-count" id="wcc-idiom">0文字</div>
+            </div>
+
+            <!-- 韻ワード（全幅） -->
+            <div class="word-card" data-wcat="rhyme" style="grid-column:1/-1">
+              <div class="word-card-header">
+                <span class="word-card-icon">🎵</span>
+                <span class="word-card-title">韻ワード</span>
+              </div>
+              <div class="word-card-hint">音が似た言葉・踏みたい韻のメモ</div>
+              <textarea class="word-card-textarea" id="wc-rhyme"
+                style="min-height:80px;"
+                placeholder="例：&#10;さよなら／また会おうか／飛び越えたら&#10;dream / seem / scream"
+                oninput="saveWordCard('rhyme',this)"></textarea>
+              <div class="word-card-count" id="wcc-rhyme">0文字</div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════════════
+             PANEL 3 : ライムメモ
+        ══════════════════════════════════════ -->
+        <div class="panel" id="panel-3">
+          <div class="panel-title">ライムメモ</div>
+          <div class="panel-desc">母音・撥音・韻のパターン別に言葉を整理できます。例から選ぶか、自分の言葉を追加しましょう。</div>
+
+          <div class="section-box" id="rhyme-cats-container">
+            <!-- JS で描画 -->
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════════════
+             PANEL 4 : 作詞する
+        ══════════════════════════════════════ -->
+        <div class="panel" id="panel-4">
+          <div class="panel-title">作詞する</div>
+          <div class="panel-desc">設定のまとめと歌詞エディターです。構成パターンを選ぶか、自由に書き込んでください。</div>
+          <div class="summary-row" id="summary-area"></div>
+
+          <!-- ── PATTERN PICKER ── -->
+          <div class="pattern-picker-area">
+            <div class="pattern-picker-label">Structure Pattern / 構成パターンを選ぶ</div>
+            <div class="pattern-genre-tabs" id="pattern-genre-tabs">
+              <button class="pattern-genre-tab active" onclick="setPatternGenre('jpop')">J-POP</button>
+              <button class="pattern-genre-tab" onclick="setPatternGenre('ballad')">バラード</button>
+              <button class="pattern-genre-tab" onclick="setPatternGenre('rock')">ロック</button>
+              <button class="pattern-genre-tab" onclick="setPatternGenre('anison')">アニソン</button>
+              <button class="pattern-genre-tab" onclick="setPatternGenre('hiphop')">Hip-Hop / R&B</button>
+              <button class="pattern-genre-tab" onclick="setPatternGenre('edm')">EDM / Pop</button>
+              <button class="pattern-genre-tab" onclick="setPatternGenre('folk')">フォーク・シンガーソングライター</button>
+            </div>
+            <div class="pattern-cards-grid" id="pattern-cards-grid"></div>
+            <div class="pattern-apply-row">
+              <button class="pattern-apply-btn" onclick="applyPattern()">この構成で始める</button>
+              <div class="pattern-apply-note">既存のセクションはクリアされます</div>
+            </div>
+          </div>
+
+          <!-- ── VERSION BAR ── -->
+          <div class="ver-bar" id="ver-bar"></div>
+
+          <!-- ── LYRIC WORKSPACE (editor + side note) ── -->
+          <div class="lyric-workspace">
+            <div class="lyric-main-col">
+
+              <!-- ── LYRIC EDITOR AREA ── -->
+              <div class="lyric-mode-toggle">
+                <button class="lyric-mode-btn active" id="mode-btn-sections" onclick="setLyricMode('sections')">セクション別に書く</button>
+                <button class="lyric-mode-btn" id="mode-btn-free" onclick="setLyricMode('free')">フリーエディター</button>
+              </div>
+
+              <!-- SECTION MODE -->
+              <div id="lyric-sections-mode">
+                <div class="lyric-sections" id="lyric-sections-list"></div>
+                <div class="add-section-row" id="add-section-row"></div>
+                <div class="lyric-toolbar" style="margin-top:6px;">
+                  <button class="add-btn" onclick="copySections()">全体をコピー</button>
+                  <button class="add-btn" onclick="clearSections()" style="border-color:var(--pink);color:var(--pink);">全クリア</button>
+                </div>
+              </div>
+
+              <!-- FREE MODE -->
+              <div id="lyric-free-mode" style="display:none;">
+                <div class="lyric-toolbar">
+                  <button class="add-btn" onclick="copyLyric()">コピー</button>
+                  <button class="add-btn" onclick="clearLyric()" style="border-color:var(--pink);color:var(--pink);">クリア</button>
+                </div>
+                <textarea class="lyric-editor" id="lyric-editor"
+                  placeholder="ここに歌詞を書いてください。"></textarea>
+              </div>
+
+            </div><!-- /lyric-main-col -->
+
+            <!-- ── SIDE NOTE ── -->
+            <div class="side-note-col">
+              <div class="side-note-box">
+                <span class="side-note-label">✎ サイドノート</span>
+                <textarea class="side-note-textarea" id="side-note-textarea"
+                  placeholder="このバージョンへのメモ…&#10;例：&#10;Bメロの韻を再考&#10;サビは「君」→「あなた」に&#10;落ちサビを追加したい"
+                  oninput="saveSideNote()"></textarea>
+                <div class="side-note-charcount" id="side-note-charcount">0文字</div>
+              </div>
+            </div>
+
+          </div><!-- /lyric-workspace -->
+        </div>
+
+      </div><!-- /content -->
+    </div><!-- /editor-view -->
+  </main>
+</div>
+
+<!-- TYPE PICKER -->
+<div class="type-picker" id="type-picker">
+  <div class="type-picker-box">
+    <div class="type-picker-title">どんな存在を追加しますか？</div>
+    <div class="type-picker-grid">
+      <div class="type-option" onclick="startAddChar('人物','👤')">
+        <span class="type-option-icon">👤</span>人物
+      </div>
+      <div class="type-option" onclick="startAddChar('動物','🐾')">
+        <span class="type-option-icon">🐾</span>動物
+      </div>
+      <div class="type-option" onclick="startAddChar('植物・花','🌿')">
+        <span class="type-option-icon">🌿</span>植物・花
+      </div>
+      <div class="type-option" onclick="startAddChar('自然・風景','🌊')">
+        <span class="type-option-icon">🌊</span>自然・風景
+      </div>
+      <div class="type-option" onclick="startAddChar('もの・道具','🎸')">
+        <span class="type-option-icon">🎸</span>もの・道具
+      </div>
+      <div class="type-option" onclick="startAddChar('その他','✨')">
+        <span class="type-option-icon">✨</span>その他
+      </div>
+    </div>
+    <button class="type-picker-cancel" onclick="closeTypePicker()">キャンセル</button>
+  </div>
+</div>
+
+<!-- DELETE MODAL -->
+<div class="modal-overlay hidden" id="delete-modal">
+  <div class="modal">
+    <h3>曲を削除しますか？</h3>
+    <p id="delete-msg">この操作は元に戻せません。</p>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal()">キャンセル</button>
+      <button class="btn-delete" onclick="deleteSong()">削除する</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ── BOTTOM NAV (mobile) ── -->
+<nav class="bottom-nav">
+  <button class="bottom-nav-btn active" id="bnav-home" onclick="bnav('home')">
+    <span class="bottom-nav-icon">🎵</span>この曲
+  </button>
+  <button class="bottom-nav-btn" id="bnav-list" onclick="openDrawer()">
+    <span class="bottom-nav-icon">📋</span>曲一覧
+  </button>
+  <button class="bottom-nav-btn" id="bnav-new" onclick="newSong()">
+    <span class="bottom-nav-icon">＋</span>新規作成
+  </button>
+</nav>
+
+<!-- ── SONG DRAWER (mobile) ── -->
+<div class="song-drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+<div class="song-drawer" id="song-drawer">
+  <div class="drawer-handle"></div>
+  <div class="drawer-header">
+    <div class="drawer-title">📋 曲一覧</div>
+    <button class="drawer-new-btn" onclick="newSong()">＋ 新しい曲</button>
+  </div>
+  <div class="drawer-song-list" id="drawer-song-list"></div>
+</div>
+
+<script>
+// ── STATE ──
+let songs     = JSON.parse(localStorage.getItem('lyrica-songs') || '[]');
+let currentId = null;
+
+function getSong() { return songs.find(s => s.id === currentId); }
+
+function defaultSong(id) {
+  const firstVer = { id: 'v1', label: 'Ver.1', lyrSections: [], lyric: '', sideNote: '' };
+  return {
+    id, title: '',
+    createdAt: new Date().toISOString(),
+    theme: [], scene: [],
+    chars: [],          // [{type, name, note, gender, age}]
+    story: '',
+    emotions: [],
+    refs: [],
+    lyric: '',
+    wordCards: { scene:'', emo:'', en:'', idiom:'', rhyme:'' },
+    versions: [firstVer],   // バージョン管理
+    activeVerId: 'v1'
+  };
+}
+
+// ── VERSION HELPERS ──
+function getActiveVer() {
+  const s = getSong(); if (!s) return null;
+  if (!s.versions || !s.versions.length) {
+    // migrate old songs
+    const v = { id: 'v1', label: 'Ver.1', lyrSections: s.lyrSections || [], lyric: s.lyric || '', sideNote: '' };
+    s.versions = [v]; s.activeVerId = 'v1'; saveSongs();
+  }
+  return s.versions.find(v => v.id === s.activeVerId) || s.versions[0];
+}
+
+function switchVer(vid) {
+  // save current editor state first
+  flushVerToState();
+  const s = getSong(); if (!s) return;
+  s.activeVerId = vid;
+  saveSongs();
+  loadVerIntoEditor();
+  renderVerBar();
+}
+
+function addVer() {
+  flushVerToState();
+  const s = getSong(); if (!s) return;
+  const num = (s.versions?.length || 0) + 1;
+  const newVer = { id: 'v' + Date.now(), label: `Ver.${num}`, lyrSections: [], lyric: '', sideNote: '' };
+  if (!s.versions) s.versions = [];
+  s.versions.push(newVer);
+  s.activeVerId = newVer.id;
+  saveSongs();
+  loadVerIntoEditor();
+  renderVerBar();
+  toast(`${newVer.label} を作成しました`);
+}
+
+function deleteVer(vid) {
+  const s = getSong(); if (!s || !s.versions) return;
+  if (s.versions.length <= 1) { toast('最後のバージョンは削除できません'); return; }
+  const ver = s.versions.find(v => v.id === vid);
+  if (!confirm(`「${ver?.label || vid}」を削除しますか？`)) return;
+  s.versions = s.versions.filter(v => v.id !== vid);
+  if (s.activeVerId === vid) {
+    s.activeVerId = s.versions[s.versions.length - 1].id;
+    loadVerIntoEditor();
+  }
+  saveSongs(); renderVerBar();
+}
+
+function flushVerToState() {
+  const s = getSong(); if (!s) return;
+  const ver = getActiveVer(); if (!ver) return;
+  ver.lyrSections = s.lyrSections || [];
+  ver.lyric = document.getElementById('lyric-editor')?.value || '';
+  ver.sideNote = document.getElementById('side-note-textarea')?.value || '';
+  saveSongs();
+}
+
+function loadVerIntoEditor() {
+  const s = getSong(); if (!s) return;
+  const ver = getActiveVer(); if (!ver) return;
+  s.lyrSections = ver.lyrSections || [];
+  const le = document.getElementById('lyric-editor');
+  if (le) le.value = ver.lyric || '';
+  const sn = document.getElementById('side-note-textarea');
+  if (sn) { sn.value = ver.sideNote || ''; updateSideNoteCount(); }
+  renderLyricSections();
+}
+
+function renderVerBar() {
+  const s = getSong(); if (!s) return;
+  const bar = document.getElementById('ver-bar'); if (!bar) return;
+  const vers = s.versions || [];
+  bar.innerHTML = vers.map(v => `
+    <div class="ver-tab${v.id === s.activeVerId ? ' active' : ''}" onclick="switchVer('${v.id}')">
+      ${esc(v.label)}
+      ${vers.length > 1 ? `<span class="ver-tab-del" onclick="event.stopPropagation();deleteVer('${v.id}')">×</span>` : ''}
+    </div>
+  `).join('') +
+  `<button class="ver-add-btn" onclick="addVer()">＋ 新バージョン</button>
+   <button class="ver-copy-btn" onclick="copyCurrentVer()">このバージョンをコピー</button>`;
+}
+
+function copyCurrentVer() {
+  flushVerToState();
+  const s = getSong(); if (!s) return;
+  const ver = getActiveVer(); if (!ver) return;
+  const num = (s.versions?.length || 0) + 1;
+  const copied = {
+    id: 'v' + Date.now(),
+    label: `Ver.${num}（${ver.label}のコピー）`,
+    lyrSections: JSON.parse(JSON.stringify(ver.lyrSections || [])),
+    lyric: ver.lyric || '',
+    sideNote: ''
+  };
+  s.versions.push(copied);
+  s.activeVerId = copied.id;
+  saveSongs();
+  loadVerIntoEditor();
+  renderVerBar();
+  toast(`「${copied.label}」を作成`);
+}
+
+function saveSideNote() {
+  const ver = getActiveVer(); if (!ver) return;
+  ver.sideNote = document.getElementById('side-note-textarea')?.value || '';
+  saveSongs();
+  updateSideNoteCount();
+}
+
+function updateSideNoteCount() {
+  const el = document.getElementById('side-note-charcount');
+  const ta = document.getElementById('side-note-textarea');
+  if (el && ta) el.textContent = ta.value.length + '文字';
+}
+
+function saveSongs() { localStorage.setItem('lyrica-songs', JSON.stringify(songs)); }
+
+// ── SONG LIST ──
+function renderSongList() {
+  const el = document.getElementById('song-list');
+  if (!songs.length) {
+    el.innerHTML = '<div style="padding:14px 8px;color:var(--text3);font-size:0.77rem;text-align:center;">まだ曲がありません</div>';
+    return;
+  }
+  el.innerHTML = songs.map(s => {
+    const d = new Date(s.createdAt);
+    const dt = `${d.getMonth()+1}/${d.getDate()}`;
+    const tags = [...(s.theme||[]).slice(0,2), ...(s.scene||[]).slice(0,1)];
+    return `<div class="song-item${s.id===currentId?' active':''}" onclick="openSong('${s.id}')">
+      <div class="song-name">${s.title||'（無題）'}</div>
+      <div class="song-date">${dt}</div>
+      ${tags.length?`<div class="song-tags-preview">${tags.map(t=>`<span class="mini-tag">${t}</span>`).join('')}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function newSong() {
+  const id   = 'song_' + Date.now();
+  songs.unshift(defaultSong(id));
+  saveSongs(); openSong(id);
+}
+
+function openSong(id) {
+  currentId = id;
+  const s   = getSong(); if (!s) return;
+  document.getElementById('empty-view').style.display  = 'none';
+  document.getElementById('editor-view').style.display = '';
+
+  document.getElementById('song-title-input').value = s.title || '';
+  document.getElementById('char-story').value       = s.story || '';
+  document.getElementById('lyric-editor').value     = s.lyric || '';
+  loadWordCards();
+  renderRhymeCats();
+
+  // reset all card selections
+  document.querySelectorAll('.card').forEach(c => c.classList.remove('selected'));
+
+  // restore theme / scene (preset cards only)
+  (s.theme||[]).forEach(v => {
+    const el = findPresetCard('theme', v);
+    if (el) el.classList.add('selected');
+  });
+  (s.scene||[]).forEach(v => {
+    const el = findPresetCard('scene', v);
+    if (el) el.classList.add('selected');
+  });
+
+  renderCharCards();
+  renderEmoTimeline();
+  renderRefList();
+  renderVerBar();
+  loadVerIntoEditor();
+
+  goStep(0);
+  renderSongList();
+}
+
+function findPresetCard(key, value) {
+  // Cards have onclick like toggleTag(this,'theme','恋愛')
+  return [...document.querySelectorAll('.card')].find(c => {
+    const a = c.getAttribute('onclick') || '';
+    return a.includes(`'${key}'`) && a.includes(`'${value}'`);
+  });
+}
+
+// ── SAVE ──
+function collectAndSave() {
+  const s = getSong(); if (!s) return;
+  s.title  = document.getElementById('song-title-input').value;
+  s.story  = document.getElementById('char-story').value;
+  s.lyric  = document.getElementById('lyric-editor')?.value || '';
+  flushVerToState();
+  saveSongs();
+}
+
+function saveSong() { collectAndSave(); renderSongList(); toast('保存しました ✓'); }
+function onTitleChange() { const s=getSong(); if(s){s.title=document.getElementById('song-title-input').value;saveSongs();renderSongList();} }
+
+// ── DELETE ──
+function confirmDelete() {
+  const s = getSong(); if (!s) return;
+  document.getElementById('delete-msg').textContent = `「${s.title||'無題'}」を削除します。`;
+  document.getElementById('delete-modal').classList.remove('hidden');
+}
+function closeModal() { document.getElementById('delete-modal').classList.add('hidden'); }
+function deleteSong() {
+  songs = songs.filter(s => s.id !== currentId);
+  saveSongs(); currentId = null; closeModal();
+  if (songs.length) openSong(songs[0].id);
+  else { document.getElementById('editor-view').style.display='none'; document.getElementById('empty-view').style.display=''; }
+  renderSongList(); toast('削除しました');
+}
+
+// ── STEPS ──
+function goStep(i) {
+  document.querySelectorAll('.panel').forEach((p,idx)  => p.classList.toggle('active', idx===i));
+  document.querySelectorAll('.step-btn').forEach((b,idx)=> b.classList.toggle('active', idx===i));
+  if (i===4) { buildSummary(); renderPatternCards(); renderVerBar(); loadVerIntoEditor(); }
+}
+
+// ── TAGS ──
+function toggleTag(el, key, value) {
+  const s = getSong(); if (!s) return;
+  if (!s[key]) s[key] = [];
+  el.classList.toggle('selected');
+  if (el.classList.contains('selected')) { if (!s[key].includes(value)) s[key].push(value); }
+  else { s[key] = s[key].filter(v => v !== value); }
+  saveSongs();
+}
+
+function addFreeTag(key, inputId, gridId) {
+  const input = document.getElementById(inputId);
+  const val   = input.value.trim(); if (!val) return;
+  const s     = getSong(); if (!s) return;
+  if (!s[key]) s[key] = [];
+  if (!s[key].includes(val)) {
+    s[key].push(val);
+    const grid = document.getElementById(gridId);
+    const card = document.createElement('div');
+    card.className = 'card selected';
+    card.innerHTML = `<span class="card-icon">✎</span>${val}`;
+    card.setAttribute('onclick', `toggleTag(this,'${key}','${val.replace(/'/g,"\\'")}')`);
+    grid.appendChild(card);
+    saveSongs(); toast(`「${val}」を追加`);
+  }
+  input.value = '';
+}
+
+// ── CHARACTERS ──
+const TYPE_ICONS = { '人物':'👤','動物':'🐾','植物・花':'🌿','自然・風景':'🌊','もの・道具':'🎸','その他':'✨' };
+
+function openTypePicker()  { document.getElementById('type-picker').classList.add('open'); }
+function closeTypePicker() { document.getElementById('type-picker').classList.remove('open'); }
+
+function startAddChar(type, icon) {
+  closeTypePicker();
+  const s = getSong(); if (!s) return;
+  if (!s.chars) s.chars = [];
+  const newChar = { type, icon, name:'', relation:'', personality:'', gender:'', age:'', note:'' };
+  s.chars.push(newChar);
+  saveSongs();
+  renderCharCards();
+  // open the new card immediately
+  const cards = document.querySelectorAll('.char-card');
+  const last  = cards[cards.length - 1];
+  if (last) { last.classList.add('open'); last.scrollIntoView({ behavior:'smooth', block:'nearest' }); }
+  // focus name input
+  const nameInput = last?.querySelector('.char-body-input');
+  if (nameInput) setTimeout(() => nameInput.focus(), 80);
+}
+
+function updateChar(idx, field, value) {
+  const s = getSong(); if (!s?.chars?.[idx]) return;
+  s.chars[idx][field] = value;
+  // live-update header name
+  if (field === 'name') {
+    const header = document.querySelector(`[data-char-idx="${idx}"] .char-card-name`);
+    if (header) header.textContent = value || '（名前未入力）';
+    renderSongList();
+  }
+  saveSongs();
+}
+
+function toggleCharCard(idx) {
+  const card = document.querySelector(`[data-char-idx="${idx}"]`);
+  if (card) card.classList.toggle('open');
+}
+
+function removeChar(idx) {
+  const s = getSong(); if (!s) return;
+  s.chars.splice(idx, 1); saveSongs(); renderCharCards();
+}
+
+function renderCharCards() {
+  const s  = getSong();
+  const el = document.getElementById('char-list');
+  if (!s?.chars?.length) { el.innerHTML = ''; return; }
+
+  el.innerHTML = s.chars.map((c, i) => {
+    const icon = c.icon || TYPE_ICONS[c.type] || '✨';
+    const isPerson = c.type === '人物';
+    const genderOptions = ['','女性 / 彼女視点','男性 / 彼視点','中性的・不明','複数人称']
+      .map(o => `<option${c.gender===o?' selected':''}>${o}</option>`).join('');
+    const ageOptions = ['','10代・学生','20代・社会人','30代以上','不明']
+      .map(o => `<option${c.age===o?' selected':''}>${o}</option>`).join('');
+
+    return `<div class="char-card${c._open?' open':''}" data-char-idx="${i}">
+      <div class="char-card-header" onclick="toggleCharCard(${i})">
+        <span class="char-card-icon">${icon}</span>
+        <span class="char-card-name">${c.name || '（名前未入力）'}</span>
+        <span class="char-card-type">${c.type}</span>
+        <span class="char-card-chevron">▼</span>
+      </div>
+      <div class="char-card-body">
+        <div class="char-body-grid">
+          <div class="char-body-field" style="grid-column:1/-1">
+            <div class="char-body-label">名前・呼び方</div>
+            <input class="char-body-input" placeholder="例：彼女、白い猫、ひまわり"
+              value="${esc(c.name)}" oninput="updateChar(${i},'name',this.value)" />
+          </div>
+          ${isPerson ? `
+          <div class="char-body-field">
+            <div class="char-body-label">性別・視点</div>
+            <select class="char-body-select" onchange="updateChar(${i},'gender',this.value)">
+              ${genderOptions}
+            </select>
+          </div>
+          <div class="char-body-field">
+            <div class="char-body-label">年代</div>
+            <select class="char-body-select" onchange="updateChar(${i},'age',this.value)">
+              ${ageOptions}
+            </select>
+          </div>
+          <div class="char-body-field" style="grid-column:1/-1">
+            <div class="char-body-label">性格・人物像</div>
+            <input class="char-body-input" placeholder="例：内向的で繊細、強がりだが傷つきやすい"
+              value="${esc(c.personality)}" oninput="updateChar(${i},'personality',this.value)" />
+          </div>
+          <div class="char-body-field" style="grid-column:1/-1">
+            <div class="char-body-label">主人公との関係</div>
+            <input class="char-body-input" placeholder="例：幼馴染、片思いの相手、遠くに去った人"
+              value="${esc(c.relation)}" oninput="updateChar(${i},'relation',this.value)" />
+          </div>` : `
+          <div class="char-body-field" style="grid-column:1/-1">
+            <div class="char-body-label">どんな存在か</div>
+            <input class="char-body-input" placeholder="例：主人公のそばにいつもいる猫、雨の日だけ現れる"
+              value="${esc(c.personality)}" oninput="updateChar(${i},'personality',this.value)" />
+          </div>`}
+          <div class="char-body-field" style="grid-column:1/-1">
+            <div class="char-body-label">メモ・その他</div>
+            <textarea class="char-body-textarea" placeholder="自由にメモ…"
+              oninput="updateChar(${i},'note',this.value)">${esc(c.note)}</textarea>
+          </div>
+        </div>
+        <button class="char-del-btn" onclick="removeChar(${i})">🗑 削除する</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+
+// ── EMOTIONS ──
+function addEmo(name, icon) {
+  const s = getSong(); if (!s) return;
+  if (!s.emotions) s.emotions = [];
+  s.emotions.push({name, icon}); saveSongs(); renderEmoTimeline();
+}
+
+function addFreeEmo() {
+  const input = document.getElementById('emo-free');
+  const val   = input.value.trim(); if (!val) return;
+  addEmo(val, '🎭'); input.value = '';
+}
+
+function removeEmo(i) {
+  const s = getSong(); if (!s) return;
+  s.emotions.splice(i,1); saveSongs(); renderEmoTimeline();
+}
+
+function renderEmoTimeline() {
+  const s  = getSong();
+  const el = document.getElementById('emo-timeline');
+  if (!s?.emotions?.length) {
+    el.innerHTML = '<span style="color:var(--text3);font-size:0.77rem;">タグを追加してください</span>'; return;
+  }
+  el.innerHTML = s.emotions.map((e,i) =>
+    `<span class="etag">${e.icon} ${e.name} <span class="etag-x" onclick="removeEmo(${i})">×</span></span>${i<s.emotions.length-1?'<span class="earrow">→</span>':''}`
+  ).join('');
+}
+
+// ── REFS ──
+function addRef() {
+  const s   = getSong(); if (!s) return;
+  const val = document.getElementById('ref-input').value.trim(); if (!val) return;
+  const tp  = document.getElementById('ref-type').value;
+  if (!s.refs) s.refs = [];
+  s.refs.push({type:tp, val});
+  document.getElementById('ref-input').value = '';
+  saveSongs(); renderRefList();
+}
+
+function removeRef(i) {
+  const s = getSong(); if (!s) return;
+  s.refs.splice(i,1); saveSongs(); renderRefList();
+}
+
+function renderRefList() {
+  const s  = getSong();
+  const el = document.getElementById('ref-list');
+  if (!s?.refs?.length) { el.innerHTML=''; return; }
+  el.innerHTML = s.refs.map((r,i) =>
+    `<div class="ref-item">
+      <span class="ref-icon">${r.type.split(' ')[0]}</span>
+      <span class="ref-text"><strong>${r.type.replace(/^.\s/,'')}</strong>：${r.val}</span>
+      <span class="ref-del" onclick="removeRef(${i})">×</span>
+    </div>`
+  ).join('');
+}
+
+
+// ── WORD CARDS (panel-2) ──
+const WORD_CATS = ['scene','emo','en','idiom','rhyme'];
+
+function saveWordCard(cat, el) {
+  const s = getSong(); if (!s) return;
+  if (!s.wordCards) s.wordCards = {};
+  s.wordCards[cat] = el.value;
+  saveSongs();
+  const countEl = document.getElementById('wcc-' + cat);
+  if (countEl) countEl.textContent = el.value.length + '文字';
+}
+
+function loadWordCards() {
+  const s = getSong(); if (!s) return;
+  const wc = s.wordCards || {};
+  // migrate legacy wordsMemo → scene card
+  if (!Object.keys(wc).length && s.wordsMemo) {
+    wc['scene'] = s.wordsMemo;
+    s.wordCards = wc;
+    saveSongs();
+  }
+  WORD_CATS.forEach(cat => {
+    const el = document.getElementById('wc-' + cat);
+    const countEl = document.getElementById('wcc-' + cat);
+    if (el) {
+      el.value = wc[cat] || '';
+      if (countEl) countEl.textContent = el.value.length + '文字';
+    }
+  });
+}
+
+function saveWordsMemo() {
+  // 後方互換のため残す（旧データ用）
+}
+function saveRhymeMemo() {
+  // 後方互換のため残す（旧データ用）
+}
+
+// ── RHYME CATS ──
+const RHYME_DEFS = [
+  { id:'aa',  icon:'🔴', name:'ああ',  reading:'a-a',  en:false,
+    examples:['スター','嗚呼','花火','夏','はなれたくない','カラフル'] },
+  { id:'ai',  icon:'🟠', name:'あい',  reading:'a-i',  en:false,
+    examples:['暗い','愛','Cry','涙','ないない','空'] },
+  { id:'au',  icon:'🟡', name:'あう',  reading:'a-u',  en:false,
+    examples:['会う','叶う','さらう','漂う','語らう'] },
+  { id:'ae',  icon:'🟢', name:'あえ',  reading:'a-e',  en:false,
+    examples:['萌え','答え','消えかけ','吠え'] },
+  { id:'ao',  icon:'🔵', name:'あお',  reading:'a-o',  en:false,
+    examples:['青','顔','ぼんやり','壊れそう'] },
+  { id:'ii',  icon:'🟣', name:'いい',  reading:'i-i',  en:false,
+    examples:['生きて','光','透明','痛い','鏡'] },
+  { id:'uu',  icon:'🟤', name:'うう',  reading:'u-u',  en:false,
+    examples:['空','夕暮れ','くずれそう','数える'] },
+  { id:'oi',  icon:'🩷', name:'おい',  reading:'o-i',  en:false,
+    examples:['遠い','宵','溶けていく','超えて'] },
+  { id:'an',  icon:'🌙', name:'あん',  reading:'a-n',  en:false,
+    examples:['ぜんぶ','たんぽぽ','さんびか','感じてた','ぼんやり'] },
+  { id:'in',  icon:'⭐', name:'いん',  reading:'i-n',  en:false,
+    examples:['信じて','沈んだ','キミンチ','林','引き寄せ'] },
+  { id:'un',  icon:'✨', name:'うん',  reading:'u-n',  en:false,
+    examples:['運命','くんくん','ふんわり','分岐点'] },
+  { id:'on',  icon:'🌊', name:'おん',  reading:'o-n',  en:false,
+    examples:['音楽','声','トーン','恋','想い出'] },
+  { id:'xxa', icon:'⚡', name:'っ＋あ行', reading:'xt+a', en:false,
+    examples:['もっと','きっと','ずっと','やっぱり','あっという間'] },
+  { id:'xxi', icon:'💫', name:'っ＋い行', reading:'xt+i', en:false,
+    examples:['きっちり','べっぴん','まっさき','ぴったり'] },
+  { id:'xxu', icon:'🌸', name:'っ＋う行', reading:'xt+u', en:false,
+    examples:['ずっと','くっきり','はっきり','まっすぐ'] },
+  { id:'en_a', icon:'🎵', name:'英語 /eɪ/',reading:'A sound', en:true,
+    examples:['pain','rain','again','way','stay','say','today','okay','away'] },
+  { id:'en_i', icon:'🎶', name:'英語 /iː/',reading:'EE sound', en:true,
+    examples:['dream','seem','scream','need','feel','real','steal','deep','keep'] },
+  { id:'en_ay', icon:'🎸', name:'英語 /aɪ/',reading:'I sound', en:true,
+    examples:['cry','fly','die','lie','my','sky','why','night','light','right'] },
+  { id:'en_o', icon:'🎹', name:'英語 /oʊ/',reading:'O sound', en:true,
+    examples:['know','show','go','flow','glow','slow','soul','alone','home','hope'] },
+  { id:'free', icon:'📝', name:'その他・自由',reading:'free', en:false,
+    examples:[] },
+];
+
+function getRhymeCats() {
+  const s = getSong(); if (!s) return {};
+  if (!s.rhymeCats) s.rhymeCats = {};
+  return s.rhymeCats;
+}
+
+function saveRhymeCats() { saveSongs(); }
+
+function toggleRhymeCat(id) {
+  const block = document.querySelector(`[data-rhyme-cat="${id}"]`);
+  if (block) block.classList.toggle('open');
+}
+
+function addRhymeWord(catId, word) {
+  if (!word.trim()) return;
+  const s = getSong(); if (!s) return;
+  if (!s.rhymeCats) s.rhymeCats = {};
+  if (!s.rhymeCats[catId]) s.rhymeCats[catId] = [];
+  if (!s.rhymeCats[catId].includes(word.trim())) {
+    s.rhymeCats[catId].push(word.trim());
+    saveRhymeCats();
+    renderRhymeCatWords(catId);
+  }
+}
+
+function removeRhymeWord(catId, idx) {
+  const s = getSong(); if (!s?.rhymeCats?.[catId]) return;
+  s.rhymeCats[catId].splice(idx, 1);
+  saveRhymeCats();
+  renderRhymeCatWords(catId);
+}
+
+function renderRhymeCatWords(catId) {
+  const s    = getSong();
+  const words= s?.rhymeCats?.[catId] || [];
+  const area = document.querySelector(`[data-rhyme-words="${catId}"]`);
+  if (!area) return;
+  const def  = RHYME_DEFS.find(d => d.id === catId);
+  const isEn = def?.en;
+  if (!words.length) { area.innerHTML = '<span style="color:var(--text3);font-size:0.75rem;">追加した言葉がここに並びます</span>'; return; }
+  area.innerHTML = words.map((w, i) =>
+    `<span class="rhyme-word-tag${isEn?' en-tag':''}">${w}<span class="rhyme-word-x" onclick="removeRhymeWord('${catId}',${i})">×</span></span>`
+  ).join('');
+}
+
+function renderRhymeCats() {
+  const container = document.getElementById('rhyme-cats-container');
+  if (!container) return;
+  const s = getSong();
+  const cats = s?.rhymeCats || {};
+
+  container.innerHTML = `<div class="section-label" style="margin-bottom:16px;">Rhyme Groups</div>` +
+  RHYME_DEFS.map(def => {
+    const isEn  = def.en;
+    const words = cats[def.id] || [];
+    const hasWords = words.length > 0;
+
+    const exChips = def.examples.map(ex =>
+      `<span class="rhyme-example-chip${isEn?' en':''}" onclick="addRhymeWord('${def.id}','${ex.replace(/'/g,"\\'")}');this.style.opacity='0.45'">${ex}</span>`
+    ).join('');
+
+    const wordTags = hasWords
+      ? words.map((w,i) => `<span class="rhyme-word-tag${isEn?' en-tag':''}">${w}<span class="rhyme-word-x" onclick="removeRhymeWord('${def.id}',${i})">×</span></span>`).join('')
+      : '<span style="color:var(--text3);font-size:0.75rem;">追加した言葉がここに並びます</span>';
+
+    return `<div class="rhyme-cat-block${hasWords?' open':''}" data-rhyme-cat="${def.id}">
+      <div class="rhyme-cat-header" onclick="toggleRhymeCat('${def.id}')">
+        <span class="rhyme-cat-icon">${def.icon}</span>
+        <span class="rhyme-cat-name">${def.name}</span>
+        <span class="rhyme-cat-reading">${def.reading}</span>
+        ${hasWords ? `<span style="font-size:0.65rem;padding:2px 7px;border-radius:8px;background:var(--accent-soft);color:var(--accent);border:1px solid rgba(140,94,60,0.2);margin-left:2px;">${words.length}</span>` : ''}
+        <span class="rhyme-cat-chevron">▼</span>
+      </div>
+      <div class="rhyme-cat-body">
+        ${def.examples.length ? `<div style="font-size:0.68rem;color:var(--text3);margin-bottom:7px;letter-spacing:0.08em;">例から追加</div>
+        <div class="rhyme-example-row">${exChips}</div>` : ''}
+        <div style="font-size:0.68rem;color:var(--text3);margin-bottom:6px;letter-spacing:0.08em;">追加した言葉</div>
+        <div class="rhyme-words-area" data-rhyme-words="${def.id}">${wordTags}</div>
+        <div class="rhyme-add-row">
+          <input class="rhyme-add-input" type="text" placeholder="${isEn ? 'Add a word...' : '言葉を入力'}"
+            id="rhyme-input-${def.id}"
+            onkeydown="if(event.key==='Enter'){addRhymeWord('${def.id}',this.value);this.value='';}" />
+          <button class="add-btn" onclick="addRhymeWord('${def.id}',document.getElementById('rhyme-input-${def.id}').value);document.getElementById('rhyme-input-${def.id}').value=''">＋</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function buildSummary() {
+  const s  = getSong(); if (!s) return;
+  const el = document.getElementById('summary-area');
+  const arc  = s.emotions?.length ? s.emotions.map(e=>`${e.icon}${e.name}`).join(' → ') : '未設定';
+  const refs = s.refs?.length     ? s.refs.map(r=>r.val).join('、') : '未設定';
+  const chars= s.chars?.length    ? s.chars.map(c=>`${c.icon||''}${c.name||'?'}(${c.type})`).join('、') : '未設定';
+  el.innerHTML = `
+    <div class="sum-card"><div class="sum-card-label">Theme</div><div class="sum-card-value">${s.theme?.join('・')||'未設定'}</div></div>
+    <div class="sum-card"><div class="sum-card-label">Scene</div><div class="sum-card-value">${s.scene?.join('・')||'未設定'}</div></div>
+    <div class="sum-card"><div class="sum-card-label">Characters</div><div class="sum-card-value">${chars}</div></div>
+    <div class="sum-card"><div class="sum-card-label">Emotion Arc</div><div class="sum-card-value">${arc}</div></div>
+    <div class="sum-card" style="grid-column:1/-1"><div class="sum-card-label">References</div><div class="sum-card-value">${refs}</div></div>
+  `;
+}
+
+function copyLyric() {
+  navigator.clipboard.writeText(document.getElementById('lyric-editor').value)
+    .then(() => toast('コピーしました ✓'));
+}
+
+function clearLyric() {
+  if (confirm('歌詞エディターをクリアしますか？')) {
+    document.getElementById('lyric-editor').value = '';
+    const s = getSong(); if (s) { s.lyric=''; saveSongs(); }
+  }
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'), 2200);
+}
+
+// ── DRAWER (mobile) ──
+function openDrawer() {
+  renderDrawerList();
+  document.getElementById('drawer-overlay').classList.add('open');
+  document.getElementById('song-drawer').classList.add('open');
+}
+function closeDrawer() {
+  document.getElementById('drawer-overlay').classList.remove('open');
+  document.getElementById('song-drawer').classList.remove('open');
+}
+function renderDrawerList() {
+  const el = document.getElementById('drawer-song-list');
+  if (!songs.length) {
+    el.innerHTML = '<div style="padding:20px;color:var(--text3);font-size:0.82rem;text-align:center;">まだ曲がありません</div>';
+    return;
+  }
+  el.innerHTML = songs.map(s => {
+    const d = new Date(s.createdAt);
+    const dt = (d.getMonth()+1) + '/' + d.getDate();
+    return `<div class="song-item${s.id===currentId?' active':''}" onclick="openSongFromDrawer('${s.id}')">
+      <div class="song-name">${s.title||'（無題）'}</div>
+      <div class="song-date">${dt}</div>
+    </div>`;
+  }).join('');
+}
+function openSongFromDrawer(id) {
+  closeDrawer();
+  openSong(id);
+}
+
+function bnav(tab) {
+  document.querySelectorAll('.bottom-nav-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById('bnav-' + tab);
+  if (btn) btn.classList.add('active');
+}
+
+// ── SECTION PATTERNS ──
+const SECTION_TYPES = [
+  { key:'intro',     label:'Intro',      badge:'badge-intro',    placeholder:'イントロ…' },
+  { key:'verse',     label:'Aメロ',      badge:'badge-verse',    placeholder:'Aメロ…' },
+  { key:'verse2',    label:'Aメロ 2',    badge:'badge-verse',    placeholder:'Aメロ 2…' },
+  { key:'pre',       label:'Bメロ',      badge:'badge-pre',      placeholder:'Bメロ（サビへの助走）…' },
+  { key:'chorus',    label:'サビ',       badge:'badge-chorus',   placeholder:'サビ…' },
+  { key:'chorus2',   label:'サビ 2',     badge:'badge-chorus',   placeholder:'サビ 2…' },
+  { key:'bridge',    label:'Cメロ／大サビ', badge:'badge-bridge', placeholder:'ブリッジ・大サビ…' },
+  { key:'outro',     label:'Outro',      badge:'badge-outro',    placeholder:'アウトロ…' },
+  { key:'interlude', label:'間奏 / Interlude', badge:'badge-interlude', placeholder:'間奏パート…' },
+  { key:'hook',      label:'Hook',       badge:'badge-hook',     placeholder:'Hook…' },
+  { key:'rap',       label:'Rap / Flow', badge:'badge-rap',      placeholder:'ラップパート…' },
+  { key:'drop',      label:'Drop',       badge:'badge-drop',     placeholder:'Drop…' },
+  { key:'skit',      label:'Skit',       badge:'badge-skit',     placeholder:'スキット・セリフ…' },
+];
+
+const PATTERNS = {
+  jpop: [
+    { name: 'J-POP 定番',       desc: 'Aメロ→Bメロ→サビ×2＋ブリッジ',
+      seq: ['verse','pre','chorus','verse2','pre','chorus','bridge','chorus'] },
+    { name: 'J-POP シンプル',   desc: 'Aメロ→サビの繰り返し',
+      seq: ['verse','chorus','verse2','chorus','bridge','chorus'] },
+    { name: 'イントロ付き定番', desc: 'イントロ＋Aメロ→Bメロ→サビ',
+      seq: ['intro','verse','pre','chorus','verse2','pre','chorus','bridge','chorus'] },
+    { name: '大サビ構成',       desc: 'サビをCメロ（大サビ）で締める',
+      seq: ['verse','pre','chorus','verse2','pre','chorus','bridge'] },
+  ],
+  ballad: [
+    { name: 'バラード定番',     desc: 'ゆっくり展開するAB-サビ構成',
+      seq: ['verse','pre','chorus','verse2','pre','chorus','bridge','chorus'] },
+    { name: 'バラード・シンプル', desc: 'Aメロ→サビだけのミニマル構成',
+      seq: ['verse','chorus','verse2','chorus','bridge','chorus'] },
+    { name: 'ピアノバラード',   desc: 'イントロから始まるフル構成',
+      seq: ['intro','verse','pre','chorus','verse2','chorus','bridge','chorus','outro'] },
+  ],
+  rock: [
+    { name: 'ロック定番',       desc: 'Aメロ→サビのシンプルな繰り返し',
+      seq: ['intro','verse','chorus','verse2','chorus','bridge','chorus','outro'] },
+    { name: 'パンク・短め',     desc: '短いAメロ→パワーコーラス',
+      seq: ['verse','chorus','verse','chorus','bridge','chorus'] },
+    { name: '間奏入りロック',   desc: 'ギターソロ（間奏）を挟む構成',
+      seq: ['intro','verse','pre','chorus','verse2','chorus','interlude','chorus','outro'] },
+  ],
+  anison: [
+    { name: 'アニソン TV Size', desc: '1番だけの短縮バージョン',
+      seq: ['intro','verse','pre','chorus'] },
+    { name: 'アニソン フル',   desc: 'イントロ→AB-サビ×2＋Cメロ',
+      seq: ['intro','verse','pre','chorus','verse2','pre','chorus','bridge','chorus','outro'] },
+    { name: 'アニソン・熱血',  desc: '疾走感のある構成',
+      seq: ['intro','verse','chorus','verse2','chorus','bridge','chorus','outro'] },
+  ],
+  hiphop: [
+    { name: 'Hip-Hop 基本',    desc: 'Verse→フック×2パターン',
+      seq: ['hook','rap','hook','rap','hook'] },
+    { name: 'Hip-Hop フル',    desc: 'イントロ付きのフル構成',
+      seq: ['intro','rap','hook','rap','hook','bridge','hook','outro'] },
+    { name: 'R&B グルーヴ',    desc: 'Verse→Pre-Chorus→Chorus',
+      seq: ['verse','pre','chorus','rap','pre','chorus','bridge','chorus'] },
+    { name: 'トラップ構成',    desc: 'フックとラップを中心に',
+      seq: ['intro','hook','rap','hook','rap','outro'] },
+  ],
+  edm: [
+    { name: 'EDM 定番',         desc: 'ビルドアップ→Drop',
+      seq: ['intro','verse','pre','drop','verse2','pre','drop','bridge','drop','outro'] },
+    { name: 'Pop EDM',          desc: 'ヴォーカル多め・サビあり',
+      seq: ['intro','verse','pre','chorus','drop','verse2','chorus','drop','outro'] },
+    { name: 'Future Bass',      desc: 'コーラス→Drop構成',
+      seq: ['intro','verse','chorus','drop','verse2','chorus','drop','outro'] },
+  ],
+  folk: [
+    { name: 'フォーク・弾き語り', desc: 'Verse→Chorusの素朴な構成',
+      seq: ['verse','chorus','verse2','chorus','bridge','chorus'] },
+    { name: 'シンガーソング',   desc: 'イントロなし・歌い出しから',
+      seq: ['verse','pre','chorus','verse2','pre','chorus','bridge','chorus','outro'] },
+    { name: '語り部スタイル',   desc: 'Aメロ中心・サビは1回',
+      seq: ['verse','verse2','chorus','verse','chorus'] },
+  ],
+};
+
+let currentPatternGenre = 'jpop';
+let selectedPatternIdx  = 0;
+
+function setPatternGenre(genre) {
+  currentPatternGenre = genre;
+  selectedPatternIdx  = 0;
+  document.querySelectorAll('.pattern-genre-tab').forEach(b => {
+    b.classList.toggle('active', b.getAttribute('onclick').includes(`'${genre}'`));
+  });
+  renderPatternCards();
+}
+
+function renderPatternCards() {
+  const list = PATTERNS[currentPatternGenre] || [];
+  const grid = document.getElementById('pattern-cards-grid'); if (!grid) return;
+  grid.innerHTML = list.map((p, i) => `
+    <div class="pattern-card${i===selectedPatternIdx?' selected':''}" onclick="selectPattern(${i})">
+      <div class="pattern-card-name">${p.name}</div>
+      <div class="pattern-card-seq">${p.seq.map(k => {
+        const t = SECTION_TYPES.find(st => st.key === k);
+        return t ? t.label : k;
+      }).join(' → ')}</div>
+    </div>
+  `).join('');
+}
+
+function selectPattern(i) {
+  selectedPatternIdx = i;
+  renderPatternCards();
+}
+
+function applyPattern() {
+  const list = PATTERNS[currentPatternGenre] || [];
+  const pat  = list[selectedPatternIdx]; if (!pat) return;
+  if (!confirm(`「${pat.name}」の構成に切り替えます。現在のセクションはクリアされます。`)) return;
+  const s = getSong(); if (!s) return;
+  const ver = getActiveVer(); if (!ver) return;
+  ver.lyrSections = pat.seq.map(key => {
+    const t = SECTION_TYPES.find(st => st.key === key) || { key, label: key, badge:'badge-interlude', placeholder:'' };
+    return { key: t.key, label: t.label, text: '' };
+  });
+  s.lyrSections = ver.lyrSections;
+  saveSongs();
+  renderLyricSections();
+  toast(`「${pat.name}」を適用しました`);
+}
+
+// ── STRUCTURED SECTIONS ──
+function getLyrSections() {
+  const s = getSong(); if (!s) return [];
+  if (!s.lyrSections) s.lyrSections = [];
+  return s.lyrSections;
+}
+
+function saveLyrSection(i, field, value) {
+  const s = getSong(); if (!s) return;
+  if (!s.lyrSections?.[i]) return;
+  s.lyrSections[i][field] = value;
+  const ver = getActiveVer();
+  if (ver) ver.lyrSections = s.lyrSections;
+  saveSongs();
+}
+
+function addManualSection(key) {
+  const s = getSong(); if (!s) return;
+  if (!s.lyrSections) s.lyrSections = [];
+  const t = SECTION_TYPES.find(st => st.key === key) || { key, label: key, badge:'badge-interlude', placeholder:'' };
+  s.lyrSections.push({ key: t.key, label: t.label, text: '' });
+  saveSongs();
+  renderLyricSections();
+  // scroll to bottom of sections
+  const list = document.getElementById('lyric-sections-list');
+  if (list) setTimeout(() => list.lastElementChild?.scrollIntoView({ behavior:'smooth', block:'nearest' }), 80);
+}
+
+function moveSectionUp(i) {
+  const s = getSong(); if (!s?.lyrSections) return;
+  if (i <= 0) return;
+  [s.lyrSections[i-1], s.lyrSections[i]] = [s.lyrSections[i], s.lyrSections[i-1]];
+  saveSongs(); renderLyricSections();
+}
+
+function moveSectionDown(i) {
+  const s = getSong(); if (!s?.lyrSections) return;
+  if (i >= s.lyrSections.length - 1) return;
+  [s.lyrSections[i+1], s.lyrSections[i]] = [s.lyrSections[i], s.lyrSections[i+1]];
+  saveSongs(); renderLyricSections();
+}
+
+function removeSection(i) {
+  const s = getSong(); if (!s?.lyrSections) return;
+  s.lyrSections.splice(i, 1); saveSongs(); renderLyricSections();
+}
+
+function renderLyricSections() {
+  const s    = getSong();
+  const secs = s?.lyrSections || [];
+  const list = document.getElementById('lyric-sections-list'); if (!list) return;
+
+  if (!secs.length) {
+    list.innerHTML = `<div style="text-align:center;padding:28px 16px;color:var(--text3);font-size:0.82rem;line-height:2;">
+      上の構成パターンを選んで「この構成で始める」を押すか、<br>下のボタンからセクションを個別に追加してください。
+    </div>`;
+  } else {
+    list.innerHTML = secs.map((sec, i) => {
+      const t = SECTION_TYPES.find(st => st.key === sec.key) || {};
+      const badge = t.badge || 'badge-interlude';
+      const ph    = t.placeholder || `${sec.label}…`;
+      const h     = Math.max(90, (sec.text?.split('\n').length || 1) * 42 + 24);
+      return `<div class="lyric-section" data-sec-idx="${i}">
+        <div class="lyric-section-header">
+          <span class="lyric-section-badge ${badge}">${sec.label}</span>
+          <input class="lyric-section-label-input" value="${esc(sec.label)}"
+            placeholder="セクション名" oninput="saveLyrSection(${i},'label',this.value)" />
+          <div class="lyric-section-actions">
+            <button class="lyric-sec-btn" onclick="moveSectionUp(${i})" title="上へ">↑</button>
+            <button class="lyric-sec-btn" onclick="moveSectionDown(${i})" title="下へ">↓</button>
+            <button class="lyric-sec-btn del" onclick="removeSection(${i})" title="削除">×</button>
+          </div>
+        </div>
+        <textarea class="lyric-section-textarea" style="height:${h}px;"
+          placeholder="${ph}"
+          oninput="saveLyrSection(${i},'text',this.value);autoResizeSec(this)">${esc(sec.text||'')}</textarea>
+      </div>`;
+    }).join('');
+  }
+
+  // add-section chips
+  const addRow = document.getElementById('add-section-row'); if (!addRow) return;
+  const quickAdd = ['verse','pre','chorus','bridge','rap','hook','drop','interlude','intro','outro','skit'];
+  addRow.innerHTML = '<span style="font-size:0.71rem;color:var(--text3);align-self:center;margin-right:3px;">追加：</span>' +
+    quickAdd.map(key => {
+      const t = SECTION_TYPES.find(st => st.key === key);
+      return `<button class="add-section-chip" onclick="addManualSection('${key}')">${t ? t.label : key}</button>`;
+    }).join('');
+}
+
+function autoResizeSec(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.max(90, el.scrollHeight) + 'px';
+}
+
+function copySections() {
+  const s    = getSong();
+  const secs = s?.lyrSections || [];
+  if (!secs.length) { toast('セクションがありません'); return; }
+  const text = secs.map(sec => `【${sec.label}】\n${sec.text||''}`).join('\n\n');
+  navigator.clipboard.writeText(text).then(() => toast('コピーしました ✓'));
+}
+
+function clearSections() {
+  if (!confirm('全セクションの内容をクリアしますか？')) return;
+  const s = getSong(); if (!s) return;
+  (s.lyrSections || []).forEach(sec => sec.text = '');
+  saveSongs(); renderLyricSections(); toast('クリアしました');
+}
+
+// ── LYRIC MODE TOGGLE ──
+let currentLyricMode = 'sections';
+function setLyricMode(mode) {
+  currentLyricMode = mode;
+  document.getElementById('mode-btn-sections').classList.toggle('active', mode==='sections');
+  document.getElementById('mode-btn-free').classList.toggle('active', mode==='free');
+  document.getElementById('lyric-sections-mode').style.display = mode==='sections' ? '' : 'none';
+  document.getElementById('lyric-free-mode').style.display     = mode==='free'     ? '' : 'none';
+}
+
+// ── INIT ──
+(function init() {
+  renderSongList();
+  renderPatternCards();
+  if (songs.length) openSong(songs[0].id);
+  else {
+    document.getElementById('editor-view').style.display = 'none';
+    document.getElementById('empty-view').style.display  = '';
+  }
+})();
+
+  // ── PWA: Service Worker 登録 ──
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js')
+        .then(reg => console.log('[Lyrica] SW registered:', reg.scope))
+        .catch(err => console.warn('[Lyrica] SW failed:', err));
+    });
+  }
+</script>
+</body>
+</html>
