@@ -838,6 +838,78 @@ body::before {
 }
 .empty-state .big { font-size: 2.2rem; margin-bottom: 10px; }
 
+/* ── VERSION MANAGER ── */
+.ver-bar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 0 14px; flex-wrap: wrap;
+}
+.ver-tab {
+  display: flex; align-items: center; gap: 5px;
+  padding: 6px 13px; border-radius: 16px; font-size: 0.78rem;
+  border: 1.5px solid var(--border-soft); background: var(--bg2);
+  color: var(--text2); cursor: pointer; transition: all 0.15s;
+  white-space: nowrap; position: relative;
+}
+.ver-tab:hover { border-color: var(--accent); color: var(--accent); }
+.ver-tab.active { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); font-weight: 500; }
+.ver-tab-del {
+  font-size: 0.75rem; color: var(--text3); margin-left: 2px;
+  display: none; cursor: pointer;
+}
+.ver-tab:hover .ver-tab-del { display: inline; }
+.ver-tab-del:hover { color: var(--pink); }
+.ver-add-btn {
+  padding: 6px 12px; border-radius: 16px; font-size: 0.78rem;
+  border: 1.5px dashed var(--accent); background: transparent;
+  color: var(--accent); cursor: pointer; transition: all 0.15s; white-space: nowrap;
+}
+.ver-add-btn:hover { background: var(--accent); color: #fff; border-style: solid; }
+.ver-copy-btn {
+  padding: 6px 12px; border-radius: 16px; font-size: 0.75rem;
+  border: 1.5px solid var(--border-soft); background: var(--bg2);
+  color: var(--text2); cursor: pointer; transition: all 0.15s; white-space: nowrap; margin-left: auto;
+}
+.ver-copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── LYRIC LAYOUT with SIDE NOTE ── */
+.lyric-workspace {
+  display: grid;
+  grid-template-columns: 1fr 260px;
+  gap: 16px;
+  align-items: start;
+}
+.lyric-main-col { min-width: 0; }
+.side-note-col {
+  position: sticky; top: 72px;
+}
+.side-note-box {
+  background: var(--surface); border: 1.5px solid var(--border-soft);
+  border-radius: 12px; padding: 14px 15px;
+  box-shadow: 0 2px 7px var(--shadow);
+}
+.side-note-label {
+  font-size: 0.65rem; color: var(--accent); letter-spacing: 0.16em;
+  font-family: 'DM Serif Display', serif; font-style: italic;
+  margin-bottom: 8px; display: block;
+}
+.side-note-textarea {
+  width: 100%; min-height: 200px;
+  background: var(--bg); border: 1.5px solid var(--border-soft);
+  border-radius: 8px; padding: 10px 12px;
+  font-family: 'Noto Sans JP', sans-serif; font-size: 0.8rem;
+  color: var(--text); line-height: 1.8; resize: vertical; outline: none;
+  transition: border-color 0.2s;
+}
+.side-note-textarea:focus { border-color: var(--accent); }
+.side-note-textarea::placeholder { color: var(--text3); }
+.side-note-charcount { font-size: 0.63rem; color: var(--text3); text-align: right; margin-top: 5px; }
+
+/* mobile: stack side note below editor */
+@media (max-width: 900px) {
+  .lyric-workspace { grid-template-columns: 1fr; }
+  .side-note-col { position: static; }
+}
+
 /* scrollbar */
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
@@ -1269,31 +1341,53 @@ body::before {
             </div>
           </div>
 
-          <!-- ── LYRIC EDITOR AREA ── -->
-          <div class="lyric-mode-toggle">
-            <button class="lyric-mode-btn active" id="mode-btn-sections" onclick="setLyricMode('sections')">セクション別に書く</button>
-            <button class="lyric-mode-btn" id="mode-btn-free" onclick="setLyricMode('free')">フリーエディター</button>
-          </div>
+          <!-- ── VERSION BAR ── -->
+          <div class="ver-bar" id="ver-bar"></div>
 
-          <!-- SECTION MODE -->
-          <div id="lyric-sections-mode">
-            <div class="lyric-sections" id="lyric-sections-list"></div>
-            <div class="add-section-row" id="add-section-row"></div>
-            <div class="lyric-toolbar" style="margin-top:6px;">
-              <button class="add-btn" onclick="copySections()">全体をコピー</button>
-              <button class="add-btn" onclick="clearSections()" style="border-color:var(--pink);color:var(--pink);">全クリア</button>
-            </div>
-          </div>
+          <!-- ── LYRIC WORKSPACE (editor + side note) ── -->
+          <div class="lyric-workspace">
+            <div class="lyric-main-col">
 
-          <!-- FREE MODE -->
-          <div id="lyric-free-mode" style="display:none;">
-            <div class="lyric-toolbar">
-              <button class="add-btn" onclick="copyLyric()">コピー</button>
-              <button class="add-btn" onclick="clearLyric()" style="border-color:var(--pink);color:var(--pink);">クリア</button>
+              <!-- ── LYRIC EDITOR AREA ── -->
+              <div class="lyric-mode-toggle">
+                <button class="lyric-mode-btn active" id="mode-btn-sections" onclick="setLyricMode('sections')">セクション別に書く</button>
+                <button class="lyric-mode-btn" id="mode-btn-free" onclick="setLyricMode('free')">フリーエディター</button>
+              </div>
+
+              <!-- SECTION MODE -->
+              <div id="lyric-sections-mode">
+                <div class="lyric-sections" id="lyric-sections-list"></div>
+                <div class="add-section-row" id="add-section-row"></div>
+                <div class="lyric-toolbar" style="margin-top:6px;">
+                  <button class="add-btn" onclick="copySections()">全体をコピー</button>
+                  <button class="add-btn" onclick="clearSections()" style="border-color:var(--pink);color:var(--pink);">全クリア</button>
+                </div>
+              </div>
+
+              <!-- FREE MODE -->
+              <div id="lyric-free-mode" style="display:none;">
+                <div class="lyric-toolbar">
+                  <button class="add-btn" onclick="copyLyric()">コピー</button>
+                  <button class="add-btn" onclick="clearLyric()" style="border-color:var(--pink);color:var(--pink);">クリア</button>
+                </div>
+                <textarea class="lyric-editor" id="lyric-editor"
+                  placeholder="ここに歌詞を書いてください。"></textarea>
+              </div>
+
+            </div><!-- /lyric-main-col -->
+
+            <!-- ── SIDE NOTE ── -->
+            <div class="side-note-col">
+              <div class="side-note-box">
+                <span class="side-note-label">✎ サイドノート</span>
+                <textarea class="side-note-textarea" id="side-note-textarea"
+                  placeholder="このバージョンへのメモ…&#10;例：&#10;Bメロの韻を再考&#10;サビは「君」→「あなた」に&#10;落ちサビを追加したい"
+                  oninput="saveSideNote()"></textarea>
+                <div class="side-note-charcount" id="side-note-charcount">0文字</div>
+              </div>
             </div>
-            <textarea class="lyric-editor" id="lyric-editor"
-              placeholder="ここに歌詞を書いてください。"></textarea>
-          </div>
+
+          </div><!-- /lyric-workspace -->
         </div>
 
       </div><!-- /content -->
@@ -1375,6 +1469,7 @@ let currentId = null;
 function getSong() { return songs.find(s => s.id === currentId); }
 
 function defaultSong(id) {
+  const firstVer = { id: 'v1', label: 'Ver.1', lyrSections: [], lyric: '', sideNote: '' };
   return {
     id, title: '',
     createdAt: new Date().toISOString(),
@@ -1384,8 +1479,125 @@ function defaultSong(id) {
     emotions: [],
     refs: [],
     lyric: '',
-    wordCards: { scene:'', emo:'', en:'', idiom:'', rhyme:'' }
+    wordCards: { scene:'', emo:'', en:'', idiom:'', rhyme:'' },
+    versions: [firstVer],   // バージョン管理
+    activeVerId: 'v1'
   };
+}
+
+// ── VERSION HELPERS ──
+function getActiveVer() {
+  const s = getSong(); if (!s) return null;
+  if (!s.versions || !s.versions.length) {
+    // migrate old songs
+    const v = { id: 'v1', label: 'Ver.1', lyrSections: s.lyrSections || [], lyric: s.lyric || '', sideNote: '' };
+    s.versions = [v]; s.activeVerId = 'v1'; saveSongs();
+  }
+  return s.versions.find(v => v.id === s.activeVerId) || s.versions[0];
+}
+
+function switchVer(vid) {
+  // save current editor state first
+  flushVerToState();
+  const s = getSong(); if (!s) return;
+  s.activeVerId = vid;
+  saveSongs();
+  loadVerIntoEditor();
+  renderVerBar();
+}
+
+function addVer() {
+  flushVerToState();
+  const s = getSong(); if (!s) return;
+  const num = (s.versions?.length || 0) + 1;
+  const newVer = { id: 'v' + Date.now(), label: `Ver.${num}`, lyrSections: [], lyric: '', sideNote: '' };
+  if (!s.versions) s.versions = [];
+  s.versions.push(newVer);
+  s.activeVerId = newVer.id;
+  saveSongs();
+  loadVerIntoEditor();
+  renderVerBar();
+  toast(`${newVer.label} を作成しました`);
+}
+
+function deleteVer(vid) {
+  const s = getSong(); if (!s || !s.versions) return;
+  if (s.versions.length <= 1) { toast('最後のバージョンは削除できません'); return; }
+  const ver = s.versions.find(v => v.id === vid);
+  if (!confirm(`「${ver?.label || vid}」を削除しますか？`)) return;
+  s.versions = s.versions.filter(v => v.id !== vid);
+  if (s.activeVerId === vid) {
+    s.activeVerId = s.versions[s.versions.length - 1].id;
+    loadVerIntoEditor();
+  }
+  saveSongs(); renderVerBar();
+}
+
+function flushVerToState() {
+  const s = getSong(); if (!s) return;
+  const ver = getActiveVer(); if (!ver) return;
+  ver.lyrSections = s.lyrSections || [];
+  ver.lyric = document.getElementById('lyric-editor')?.value || '';
+  ver.sideNote = document.getElementById('side-note-textarea')?.value || '';
+  saveSongs();
+}
+
+function loadVerIntoEditor() {
+  const s = getSong(); if (!s) return;
+  const ver = getActiveVer(); if (!ver) return;
+  s.lyrSections = ver.lyrSections || [];
+  const le = document.getElementById('lyric-editor');
+  if (le) le.value = ver.lyric || '';
+  const sn = document.getElementById('side-note-textarea');
+  if (sn) { sn.value = ver.sideNote || ''; updateSideNoteCount(); }
+  renderLyricSections();
+}
+
+function renderVerBar() {
+  const s = getSong(); if (!s) return;
+  const bar = document.getElementById('ver-bar'); if (!bar) return;
+  const vers = s.versions || [];
+  bar.innerHTML = vers.map(v => `
+    <div class="ver-tab${v.id === s.activeVerId ? ' active' : ''}" onclick="switchVer('${v.id}')">
+      ${esc(v.label)}
+      ${vers.length > 1 ? `<span class="ver-tab-del" onclick="event.stopPropagation();deleteVer('${v.id}')">×</span>` : ''}
+    </div>
+  `).join('') +
+  `<button class="ver-add-btn" onclick="addVer()">＋ 新バージョン</button>
+   <button class="ver-copy-btn" onclick="copyCurrentVer()">このバージョンをコピー</button>`;
+}
+
+function copyCurrentVer() {
+  flushVerToState();
+  const s = getSong(); if (!s) return;
+  const ver = getActiveVer(); if (!ver) return;
+  const num = (s.versions?.length || 0) + 1;
+  const copied = {
+    id: 'v' + Date.now(),
+    label: `Ver.${num}（${ver.label}のコピー）`,
+    lyrSections: JSON.parse(JSON.stringify(ver.lyrSections || [])),
+    lyric: ver.lyric || '',
+    sideNote: ''
+  };
+  s.versions.push(copied);
+  s.activeVerId = copied.id;
+  saveSongs();
+  loadVerIntoEditor();
+  renderVerBar();
+  toast(`「${copied.label}」を作成`);
+}
+
+function saveSideNote() {
+  const ver = getActiveVer(); if (!ver) return;
+  ver.sideNote = document.getElementById('side-note-textarea')?.value || '';
+  saveSongs();
+  updateSideNoteCount();
+}
+
+function updateSideNoteCount() {
+  const el = document.getElementById('side-note-charcount');
+  const ta = document.getElementById('side-note-textarea');
+  if (el && ta) el.textContent = ta.value.length + '文字';
 }
 
 function saveSongs() { localStorage.setItem('lyrica-songs', JSON.stringify(songs)); }
@@ -1443,7 +1655,8 @@ function openSong(id) {
   renderCharCards();
   renderEmoTimeline();
   renderRefList();
-  renderLyricSections();
+  renderVerBar();
+  loadVerIntoEditor();
 
   goStep(0);
   renderSongList();
@@ -1462,7 +1675,8 @@ function collectAndSave() {
   const s = getSong(); if (!s) return;
   s.title  = document.getElementById('song-title-input').value;
   s.story  = document.getElementById('char-story').value;
-  s.lyric  = document.getElementById('lyric-editor').value;
+  s.lyric  = document.getElementById('lyric-editor')?.value || '';
+  flushVerToState();
   saveSongs();
 }
 
@@ -1488,7 +1702,7 @@ function deleteSong() {
 function goStep(i) {
   document.querySelectorAll('.panel').forEach((p,idx)  => p.classList.toggle('active', idx===i));
   document.querySelectorAll('.step-btn').forEach((b,idx)=> b.classList.toggle('active', idx===i));
-  if (i===4) { buildSummary(); renderPatternCards(); renderLyricSections(); }
+  if (i===4) { buildSummary(); renderPatternCards(); renderVerBar(); loadVerIntoEditor(); }
 }
 
 // ── TAGS ──
@@ -2048,10 +2262,12 @@ function applyPattern() {
   const pat  = list[selectedPatternIdx]; if (!pat) return;
   if (!confirm(`「${pat.name}」の構成に切り替えます。現在のセクションはクリアされます。`)) return;
   const s = getSong(); if (!s) return;
-  s.lyrSections = pat.seq.map(key => {
+  const ver = getActiveVer(); if (!ver) return;
+  ver.lyrSections = pat.seq.map(key => {
     const t = SECTION_TYPES.find(st => st.key === key) || { key, label: key, badge:'badge-interlude', placeholder:'' };
     return { key: t.key, label: t.label, text: '' };
   });
+  s.lyrSections = ver.lyrSections;
   saveSongs();
   renderLyricSections();
   toast(`「${pat.name}」を適用しました`);
@@ -2068,6 +2284,8 @@ function saveLyrSection(i, field, value) {
   const s = getSong(); if (!s) return;
   if (!s.lyrSections?.[i]) return;
   s.lyrSections[i][field] = value;
+  const ver = getActiveVer();
+  if (ver) ver.lyrSections = s.lyrSections;
   saveSongs();
 }
 
